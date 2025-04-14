@@ -1,0 +1,532 @@
+# Документация библиотеки ClickGUI для Roblox
+
+## Обзор
+
+Библиотека ClickGUI предназначена для создания графических интерфейсов пользователя (UI) в среде Roblox. Она предоставляет набор инструментов для создания интерактивных окон, страниц, секций и элементов управления, таких как переключатели, ползунки, кнопки, текстовые поля и другие. Библиотека ориентирована на использование в Roblox Studio и некоторых executors (например, Krampus), но не гарантирует полную совместимость со всеми платформами.
+
+Основные возможности библиотеки:
+- Создание многоуровневых интерфейсов с вкладками и секциями.
+- Поддержка различных элементов управления: Toggle, Slider, Dropdown, Keybind, Colorpicker, Textbox, Button, PlayerList.
+- Всплывающие уведомления с настраиваемым текстом, длительностью и цветом.
+- Базовое управление конфигурациями (сохранение/загрузка настроек).
+- Частичная поддержка тем через изменение акцентного цвета.
+
+Ограничения:
+- Код тестировался только в Roblox Studio с executor Krampus.
+- Некоторые функции, такие как кастомные шрифты, могут работать некорректно.
+- Отсутствует полноценный менеджер тем.
+
+---
+
+## Иерархия элементов
+
+Библиотека организована в строгой иерархии, что упрощает создание и управление интерфейсом. Структура выглядит следующим образом:
+
+```
+Window
+├── Page
+│   ├── Section
+│   │   ├── Toggle
+│   │   ├── Slider
+│   │   ├── Dropdown
+│   │   ├── Keybind
+│   │   ├── Colorpicker
+│   │   ├── Textbox
+│   │   ├── Button
+│   │   └── PlayerList
+│   └── Section
+├── Page
+└── Notification
+```
+
+- **Window**: Корневой элемент интерфейса, содержащий страницы и уведомления.
+- **Page**: Вкладка (таб) внутри окна, которая содержит секции.
+- **Section**: Контейнер для элементов управления, может располагаться слева или справа на странице.
+- **Элементы управления**: Конкретные интерактивные элементы, такие как переключатели, кнопки и т.д.
+- **Notification**: Независимый элемент, отображаемый поверх интерфейса для вывода сообщений.
+
+---
+
+## API библиотеки
+
+Библиотека предоставляет набор функций и методов для создания и управления интерфейсом. Ниже описаны основные методы с их параметрами и примерами.
+
+### Library:Window(options)
+Создает новое окно интерфейса — основной контейнер для всех элементов.
+
+- **options**: Таблица с параметрами.
+  - `Name`: Название окна (string, по умолчанию "Monlith").
+- **Возвращает**: Объект окна с методами для добавления страниц и других элементов.
+
+**Пример**:
+```lua
+local Library = loadstring(game:HttpGet("URL_к_библиотеке"))()
+local Window = Library:Window({Name = "Мой интерфейс"})
+```
+
+### Library:Page(options)
+Создает новую страницу (вкладку) внутри окна.
+
+- **options**: Таблица с параметрами.
+  - `Name`: Название страницы (string, по умолчанию "Page").
+- **Возвращает**: Объект страницы с методами для добавления секций.
+
+**Пример**:
+```lua
+local MainPage = Window:Page({Name = "Главная"})
+```
+
+### Library:Section(options)
+Создает новую секцию на странице для группировки элементов управления.
+
+- **options**: Таблица с параметрами.
+  - `Name`: Название секции (string).
+  - `Side`: Сторона размещения ("Left" или "Right", по умолчанию "Left").
+- **Возвращает**: Объект секции с методами для добавления элементов управления.
+
+**Пример**:
+```lua
+local MainSection = MainPage:Section({Name = "Основные настройки", Side = "Left"})
+```
+
+### Library:Notification(message, duration, color)
+Создает всплывающее уведомление.
+
+- **message**: Текст уведомления (string).
+- **duration**: Длительность отображения в секундах (number).
+- **color**: Цвет рамки уведомления (Color3, по умолчанию акцентный цвет).
+- **Возвращает**: Объект уведомления с методом `remove()`.
+
+**Пример**:
+```lua
+Library:Notification("Добро пожаловать!", 5, Color3.fromRGB(0, 255, 0))
+```
+
+### Элементы управления
+
+#### Section:Toggle(options)
+Создает переключатель (вкл/выкл).
+
+- **options**:
+  - `Name`: Название переключателя (string).
+  - `Flag`: Уникальный идентификатор для сохранения состояния (string, по умолчанию генерируется автоматически).
+  - `Default`: Начальное состояние (boolean, по умолчанию false).
+  - `Callback`: Функция, вызываемая при изменении состояния (function(state)).
+- **Возвращает**: Объект переключателя с методом `Set(state)`.
+
+**Пример**:
+```lua
+MainSection:Toggle({
+    Name = "Включить скорость",
+    Flag = "SpeedToggle",
+    Default = false,
+    Callback = function(state)
+        game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = state and 50 or 16
+    end
+})
+```
+
+#### Section:Slider(options)
+Создает ползунок для выбора числового значения.
+
+- **options**:
+  - `Name`: Название ползунка (string).
+  - `Flag`: Уникальный идентификатор (string).
+  - `Min`: Минимальное значение (number).
+  - `Max`: Максимальное значение (number).
+  - `Default`: Начальное значение (number).
+  - `Callback`: Функция, вызываемая при изменении значения (function(value)).
+- **Возвращает**: Объект ползунка с методом `Set(value)`.
+
+**Пример**:
+```lua
+MainSection:Slider({
+    Name = "Громкость",
+    Flag = "VolumeSlider",
+    Min = 0,
+    Max = 100,
+    Default = 50,
+    Callback = function(value)
+        print("Громкость:", value)
+    end
+})
+```
+
+#### Section:Dropdown(options)
+Создает выпадающий список.
+
+- **options**:
+  - `Name`: Название списка (string).
+  - `Flag`: Уникальный идентификатор (string).
+  - `Options`: Список значений (table).
+  - `Default`: Начальное значение (string или table для множественного выбора).
+  - `Callback`: Функция, вызываемая при выборе значения (function(value)).
+- **Возвращает**: Объект списка с методом `Set(value)`.
+
+**Пример**:
+```lua
+MainSection:Dropdown({
+    Name = "Выбор режима",
+    Flag = "ModeDropdown",
+    Options = {"Режим 1", "Режим 2", "Режим 3"},
+    Default = "Режим 1",
+    Callback = function(value)
+        print("Выбран режим:", value)
+    end
+})
+```
+
+#### Section:Keybind(options)
+Создает элемент для привязки клавиш или кнопок мыши.
+
+- **options**:
+  - `Name`: Название привязки (string).
+  - `Flag`: Уникальный идентификатор (string).
+  - `Default`: Начальная клавиша (Enum.KeyCode или Enum.UserInputType).
+  - `Mode`: Режим работы ("Hold", "Toggle", "Always", по умолчанию "Toggle").
+  - `Callback`: Функция, вызываемая при активации (function(state)).
+- **Возвращает**: Объект привязки с методом `Set(key)`.
+
+**Пример**:
+```lua
+MainSection:Keybind({
+    Name = "Активировать",
+    Flag = "ActivateKey",
+    Default = Enum.KeyCode.E,
+    Mode = "Toggle",
+    Callback = function(state)
+        print("Активация:", state)
+    end
+})
+```
+
+#### Section:Colorpicker(options)
+Создает выбор цвета.
+
+- **options**:
+  - `Name`: Название выбора цвета (string).
+  - `Flag`: Уникальный идентификатор (string).
+  - `Default`: Начальный цвет (Color3, по умолчанию красный).
+  - `Alpha`: Начальная прозрачность (number, 0–1, по умолчанию 1).
+  - `Callback`: Функция, вызываемая при изменении цвета (function(color)).
+- **Возвращает**: Объект выбора цвета с методом `Set(color)`.
+
+**Пример**:
+```lua
+MainSection:Colorpicker({
+    Name = "Цвет интерфейса",
+    Flag = "InterfaceColor",
+    Default = Color3.fromRGB(0, 170, 255),
+    Callback = function(color)
+        Library:ChangeAccent(color)
+    end
+})
+```
+
+#### Section:Textbox(options)
+Создает текстовое поле.
+
+- **options**:
+  - `Name`: Название поля (string, опционально).
+  - `Flag`: Уникальный идентификатор (string).
+  - `Placeholder`: Текст-подсказка (string, по умолчанию "").
+  - `Default`: Начальное значение (string, по умолчанию "").
+  - `Callback`: Функция, вызываемая при вводе текста (function(text)).
+- **Возвращает**: Объект текстового поля с методом `Set(text)`.
+
+**Пример**:
+```lua
+MainSection:Textbox({
+    Name = "Имя",
+    Flag = "NameTextbox",
+    Placeholder = "Введите имя",
+    Callback = function(text)
+        print("Введено имя:", text)
+    end
+})
+```
+
+#### Section:Button(options)
+Создает кнопку.
+
+- **options**:
+  - `Name`: Название кнопки (string).
+  - `Callback`: Функция, вызываемая при нажатии (function()).
+- **Возвращает**: Объект кнопки.
+
+**Пример**:
+```lua
+MainSection:Button({
+    Name = "Телепортироваться",
+    Callback = function()
+        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(0, 50, 0)
+    end
+})
+```
+
+#### Section:PlayerList(options)
+Создает список игроков с возможностью выбора, установки дружелюбного статуса или приоритета.
+
+- **options**:
+  - `Flag`: Уникальный идентификатор (string).
+- **Возвращает**: Объект списка игроков с методом `Refresh(players, dontchange)`.
+
+**Пример**:
+```lua
+MainPage:PlayerList({Flag = "PlayerList"})
+```
+
+### Library:ChangeAccent(color)
+Изменяет акцентный цвет интерфейса.
+
+- **color**: Новый цвет (Color3).
+- **Применяется**: К элементам, помеченным как `ThemeObjects` (рамки, текст, полосы прокрутки).
+
+**Пример**:
+```lua
+Library:ChangeAccent(Color3.fromRGB(255, 0, 0))
+```
+
+### Library:GetConfig()
+Возвращает текущую конфигурацию интерфейса в виде строки.
+
+- **Возвращает**: Строку с настройками всех флагов.
+
+**Пример**:
+```lua
+local config = Library:GetConfig()
+writefile("config.txt", config)
+```
+
+### Library:LoadConfig(config)
+Загружает конфигурацию из строки.
+
+- **config**: Строка с настройками.
+- **Применяет**: Значения ко всем флагам.
+
+**Пример**:
+```lua
+if isfile("config.txt") then
+    local config = readfile("config.txt")
+    Library:LoadConfig(config)
+end
+```
+
+### Library:SetOpen(bool)
+Открывает или закрывает интерфейс.
+
+- **bool**: Состояние (true — открыть, false — закрыть).
+
+**Пример**:
+```lua
+Library:SetOpen(false)
+```
+
+---
+
+## Примеры использования
+
+### Простой интерфейс
+Создание окна с одной страницей, секцией и несколькими элементами.
+
+```lua
+local Library = loadstring(game:HttpGet("URL_к_библиотеке"))()
+
+local Window = Library:Window({Name = "Тестовый интерфейс"})
+local Page = Window:Page({Name = "Настройки"})
+local Section = Page:Section({Name = "Основное", Side = "Left"})
+
+Section:Toggle({
+    Name = "Включить свет",
+    Flag = "LightToggle",
+    Default = false,
+    Callback = function(state)
+        print("Свет:", state and "Вкл" or "Выкл")
+    end
+})
+
+Section:Button({
+    Name = "Кликни меня",
+    Callback = function()
+        print("Кнопка нажата!")
+        Library:Notification("Кнопка активирована!", 3, Color3.fromRGB(0, 255, 0))
+    end
+})
+```
+
+### Интерфейс с конфигурацией
+Создание интерфейса с сохранением и загрузкой настроек.
+
+```lua
+local Library = loadstring(game:HttpGet("URL_к_библиотеке"))()
+
+local Window = Library:Window({Name = "Конфигуратор"})
+local Page = Window:Page({Name = "Настройки"})
+local Section = Page:Section({Name = "Управление", Side = "Left"})
+
+Section:Slider({
+    Name = "Скорость",
+    Flag = "SpeedSlider",
+    Min = 16,
+    Max = 100,
+    Default = 16,
+    Callback = function(value)
+        game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = value
+    end
+})
+
+Section:Button({
+    Name = "Сохранить конфиг",
+    Callback = function()
+        local config = Library:GetConfig()
+        writefile("my_config.txt", config)
+        Library:Notification("Конфиг сохранен!", 3, Color3.fromRGB(0, 255, 0))
+    end
+})
+
+Section:Button({
+    Name = "Загрузить конфиг",
+    Callback = function()
+        if isfile("my_config.txt") then
+            local config = readfile("my_config.txt")
+            Library:LoadConfig(config)
+            Library:Notification("Конфиг загружен!", 3, Color3.fromRGB(0, 255, 0))
+        end
+    end
+})
+```
+
+### Кастомный менеджер конфигов с кодами
+Создание интерфейса, где конфигурация сохраняется в виде кода, который можно ввести для загрузки.
+
+```lua
+local Library = loadstring(game:HttpGet("URL_к_библиотеке"))()
+local HttpService = game:GetService("HttpService")
+
+local Window = Library:Window({Name = "Коды конфигов"})
+local Page = Window:Page({Name = "Конфиги"})
+local Section = Page:Section({Name = "Управление конфигами"})
+
+local function EncodeConfig()
+    local config = Library:GetConfig()
+    local json = HttpService:JSONEncode({data = config})
+    local encoded = HttpService:UrlEncode(json)
+    return encoded
+end
+
+local function DecodeConfig(code)
+    local decoded = HttpService:UrlDecode(code)
+    local json = HttpService:JSONDecode(decoded)
+    Library:LoadConfig(json.data)
+end
+
+Section:Toggle({
+    Name = "Тестовый переключатель",
+    Flag = "TestToggle",
+    Default = false,
+    Callback = function(state)
+        print("Переключатель:", state)
+    end
+})
+
+Section:Button({
+    Name = "Получить код",
+    Callback = function()
+        local code = EncodeConfig()
+        Library:Notification("Код: " .. code, 10, Color3.fromRGB(255, 255, 255))
+    end
+})
+
+Section:Textbox({
+    Name = "Ввести код",
+    Placeholder = "Введите код конфига",
+    Callback = function(text)
+        DecodeConfig(text)
+        Library:Notification("Конфиг загружен!", 3, Color3.fromRGB(0, 255, 0))
+    end
+})
+```
+
+---
+
+## Расширенные возможности
+
+### Создание менеджера тем
+Хотя библиотека поддерживает только изменение акцентного цвета через `Library:ChangeAccent`, можно создать кастомный менеджер тем.
+
+**Пример**:
+```lua
+local Themes = {
+    Dark = {
+        Accent = Color3.fromRGB(0, 170, 255),
+        Background = Color3.fromRGB(35, 35, 35),
+        Text = Color3.fromRGB(255, 255, 255)
+    },
+    Light = {
+        Accent = Color3.fromRGB(100, 100, 255),
+        Background = Color3.fromRGB(200, 200, 200),
+        Text = Color3.fromRGB(0, 0, 0)
+    }
+}
+
+local function ApplyTheme(themeName)
+    local theme = Themes[themeName]
+    Library:ChangeAccent(theme.Accent)
+    for _, obj in pairs(Library.ThemeObjects) do
+        if obj:IsA("Frame") then
+            obj.BackgroundColor3 = theme.Background
+        elseif obj:IsA("TextLabel") or obj:IsA("TextBox") then
+            obj.TextColor3 = theme.Text
+        end
+    end
+end
+
+local Window = Library:Window({Name = "Темы"})
+local Page = Window:Page({Name = "Выбор темы"})
+local Section = Page:Section({Name = "Темы"})
+
+Section:Button({
+    Name = "Темная тема",
+    Callback = function()
+        ApplyTheme("Dark")
+    end
+})
+
+Section:Button({
+    Name = "Светлая тема",
+    Callback = function()
+        ApplyTheme("Light")
+    end
+})
+```
+
+### Управление конфигурациями
+Библиотека позволяет сохранять и загружать конфигурации через файлы, но можно расширить функционал, добавив поддержку кодов, как показано в примере выше.
+
+### Добавление кастомных элементов
+Для создания кастомных элементов можно использовать `Library:NewInstance` для генерации Roblox-объектов с привязкой к теме.
+
+**Пример**:
+```lua
+local customFrame = Library:NewInstance("Frame", true)
+customFrame.Size = UDim2.new(0, 100, 0, 50)
+customFrame.Position = UDim2.new(0, 10, 0, 10)
+customFrame.Parent = MainSection.Elements.SectionContent
+```
+
+---
+
+## Ограничения и рекомендации
+
+1. **Совместимость**: Библиотека тестировалась только в Roblox Studio с Krampus. Для других executors могут потребоваться доработки.
+2. **Шрифты**: Кастомные шрифты (например, ProggyClean.ttf) могут не работать в некоторых окружениях. Рекомендуется использовать стандартные шрифты Roblox.
+3. **Производительность**: При большом количестве элементов интерфейса (например, десятки Dropdown или PlayerList) производительность может снижаться. Старайтесь оптимизировать количество элементов.
+4. **Безопасность конфигов**: Если вы используете кастомный менеджер конфигов с кодами, убедитесь, что данные кодируются безопасно (например, через Base64 вместо простого UrlEncode).
+
+---
+
+## Заключение
+
+Библиотека ClickGUI — мощный инструмент для создания пользовательских интерфейсов в Roblox. Она проста в использовании, но достаточно гибкая для реализации сложных интерфейсов. Поддержка конфигураций и частичная поддержка тем делают её удобной для базовых задач, а возможность кастомизации позволяет расширять функционал под конкретные нужды. Используйте эту документацию как справочник для создания собственных интерфейсов, а примеры — как отправную точку для экспериментов.
+
+Если у вас есть вопросы или нужны доработки, обратитесь к сообществу разработчиков Roblox или экспериментируйте с кодом!

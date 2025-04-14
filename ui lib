@@ -2457,3 +2457,409 @@ local Passed, Statement = pcall(function()
 	effects:CreateToggle({Name = "Override Skybox", State = false})
 end)
 --
+
+-- [[ // Config System Addition // ]]
+local HttpService = game:GetService("HttpService")
+local Players = game:GetService("Players")
+
+-- [[ // Config System // ]]
+local configs = {}
+
+function library:InitConfigSystem()
+    configs.__index = configs
+end
+
+function library:CreateConfigSystem()
+    local ConfigSystem = {
+        Configs = {},
+        CurrentConfig = nil,
+        Folder = library.Folder .. "/" .. library.Configs,
+        EncodeKey = "PuppyWareConfig" -- Change for unique encoding
+    }
+    
+    -- Ensure config folder exists
+    if not isfolder(ConfigSystem.Folder) then
+        makefolder(ConfigSystem.Folder)
+    end
+    
+    -- [[ // Config Functions // ]]
+    function ConfigSystem:SaveConfig(name)
+        local configData = {}
+        
+        -- Collect all UI element states
+        for _, page in pairs(self.Pages) do
+            for _, section in pairs({page.Left, page.Right}) do
+                for _, content in pairs(section.Content) do
+                    if content.Get then
+                        configData[page.Image .. "_" .. section.Name .. "_" .. content.Name] = content:Get()
+                    end
+                end
+            end
+        end
+        
+        -- Save to file
+        local filePath = ConfigSystem.Folder .. "/" .. name .. ".json"
+        writefile(filePath, HttpService:JSONEncode(configData))
+        ConfigSystem.Configs[name] = configData
+    end
+    
+    function ConfigSystem:LoadConfig(name)
+        local filePath = ConfigSystem.Folder .. "/" .. name .. ".json"
+        if isfile(filePath) then
+            local data = HttpService:JSONDecode(readfile(filePath))
+            ConfigSystem.CurrentConfig = name
+            
+            -- Apply states to UI elements
+            for _, page in pairs(self.Pages) do
+                for _, section in pairs({page.Left, page.Right}) do
+                    for _, content in pairs(section.Content) do
+                        local key = page.Image .. "_" .. section.Name .. "_" .. content.Name
+                        if data[key] and content.Set then
+                            content:Set(data[key])
+                        end
+                    end
+                end
+            end
+        end
+    end
+    
+    function ConfigSystem:DeleteConfig(name)
+        local filePath = ConfigSystem.Folder .. "/" .. name .. ".json"
+        if isfile(filePath) then
+            delfile(filePath)
+            ConfigSystem.Configs[name] = nil
+        end
+    end
+    
+    function ConfigSystem:GetConfigList()
+        local list = {}
+        for _, file in pairs(listfiles(ConfigSystem.Folder)) do
+            if isfile(file) and file:match("%.json$") then
+                table.insert(list, file:match("([^/]+)%.json$"))
+            end
+        end
+        return list
+    end
+    
+    -- [[ // Cloud Config System // ]]
+    function ConfigSystem:EncodeConfig(name)
+        local filePath = ConfigSystem.Folder .. "/" .. name .. ".json"
+        if isfile(filePath) then
+            local data = readfile(filePath)
+            local encoded = HttpService:JSONEncode({
+                key = ConfigSystem.EncodeKey,
+                data = HttpService:Base64Encode(data)
+            })
+            return encoded
+        end
+        return nil
+    end
+    
+    function ConfigSystem:DecodeConfig(encoded)
+        local success, decoded = pcall(function()
+            return HttpService:JSONDecode(encoded)
+        end)
+        
+        if success and decoded.key == ConfigSystem.EncodeKey then
+            local configData = HttpService:Base64Decode(decoded.data)
+            local configName = "Cloud_" .. tick()
+            writefile(ConfigSystem.Folder .. "/" .. configName .. ".json", configData)
+            self:LoadConfig(configName)
+            return configName
+        end
+        return nil
+    end
+    
+    return setmetatable(ConfigSystem, configs)
+end
+
+-- [[ // Config UI Elements // ]]
+function pages:CreateConfigSection(Properties)
+    Properties = Properties or {}
+    
+    local Section = {
+        Name = (Properties.name or Properties.Name or "Config Manager"),
+        Size = (Properties.size or Properties.Size or 300),
+        Side = (Properties.side or Properties.Side or "Left"),
+        Content = {},
+        Window = self.Window,
+        Page = self,
+        ConfigSystem = self.Window:CreateConfigSystem()
+    }
+    
+    do
+        local Section_Holder = utility:RenderObject("Frame", {
+            BackgroundColor3 = Color3.fromRGB(40, 40, 40),
+            BackgroundTransparency = 0,
+            BorderColor3 = Color3.fromRGB(12, 12, 12),
+            BorderMode = "Inset",
+            BorderSizePixel = 1,
+            Parent = Section.Page[Section.Side],
+            Size = UDim2.new(1, 0, 0, Section.Size),
+            ZIndex = 2
+        })
+        
+        local Section_Holder_Extra = utility:RenderObject("Frame", {
+            BackgroundColor3 = Color3.fromRGB(0, 0, 0),
+            BackgroundTransparency = 1,
+            BorderColor3 = Color3.fromRGB(0, 0, 0),
+            BorderSizePixel = 0,
+            Parent = Section_Holder,
+            Position = UDim2.new(0, 1, 0, 1),
+            Size = UDim2.new(1, -2, 1, -2),
+            ZIndex = 2
+        })
+        
+        local Section_Holder_Frame = utility:RenderObject("Frame", {
+            BackgroundColor3 = Color3.fromRGB(23, 23, 23),
+            BackgroundTransparency = 0,
+            BorderColor3 = Color3.fromRGB(0, 0, 0),
+            BorderSizePixel = 0,
+            Parent = Section_Holder,
+            Position = UDim2.new(0, 1, 0, 1),
+            Size = UDim2.new(1, -2, 1, -2),
+            ZIndex = 2
+        })
+        
+        local Section_Holder_TitleInline = utility:RenderObject("Frame", {
+            BackgroundColor3 = Color3.fromRGB(23, 23, 23),
+            BackgroundTransparency = 0,
+            BorderColor3 = Color3.fromRGB(0, 0, 0),
+            BorderSizePixel = 0,
+            Parent = Section_Holder,
+            Position = UDim2.new(0, 9, 0, -1),
+            Size = UDim2.new(0, 0, 0, 2),
+            ZIndex = 5
+        })
+        
+        local Section_Holder_Title = utility:RenderObject("TextLabel", {
+            AnchorPoint = Vector2.new(0, 0.5),
+            BackgroundColor3 = Color3.fromRGB(0, 0, 0),
+            BackgroundTransparency = 1,
+            BorderColor3 = Color3.fromRGB(0, 0, 0),
+            BorderSizePixel = 0,
+            Parent = Section_Holder,
+            Position = UDim2.new(0, 12, 0, 0),
+            Size = UDim2.new(1, -26, 0, 15),
+            ZIndex = 5,
+            Font = "Code",
+            RichText = true,
+            Text = "<b>" .. Section.Name .. "</b>",
+            TextColor3 = Color3.fromRGB(205, 205, 205),
+            TextSize = 11,
+            TextStrokeTransparency = 1,
+            TextXAlignment = "Left"
+        })
+        
+        local Holder_Frame_ContentHolder = utility:RenderObject("ScrollingFrame", {
+            BackgroundColor3 = Color3.fromRGB(0, 0, 0),
+            BackgroundTransparency = 1,
+            BorderColor3 = Color3.fromRGB(0, 0, 0),
+            BorderSizePixel = 0,
+            Parent = Section_Holder_Frame,
+            Position = UDim2.new(0, 0, 0, 0),
+            Size = UDim2.new(1, 0, 1, 0),
+            ZIndex = 4,
+            AutomaticCanvasSize = "Y",
+            BottomImage = "rbxassetid://7783554086",
+            CanvasSize = UDim2.new(0, 0, 0, 0),
+            MidImage = "rbxassetid://7783554086",
+            ScrollBarImageColor3 = Color3.fromRGB(65, 65, 65),
+            ScrollBarImageTransparency = 0,
+            ScrollBarThickness = 5,
+            TopImage = "rbxassetid://7783554086",
+            VerticalScrollBarInset = "None"
+        })
+        
+        local Frame_ContentHolder_List = utility:RenderObject("UIListLayout", {
+            Padding = UDim.new(0, 8),
+            Parent = Holder_Frame_ContentHolder,
+            FillDirection = "Vertical",
+            HorizontalAlignment = "Center",
+            VerticalAlignment = "Top"
+        })
+        
+        local Frame_ContentHolder_Padding = utility:RenderObject("UIPadding", {
+            Parent = Holder_Frame_ContentHolder,
+            PaddingTop = UDim.new(0, 15),
+            PaddingBottom = UDim.new(0, 15)
+        })
+        
+        -- [[ // Config UI Elements // ]]
+        local ConfigNameInput = utility:RenderObject("TextBox", {
+            BackgroundColor3 = Color3.fromRGB(30, 30, 30),
+            BorderColor3 = Color3.fromRGB(12, 12, 12),
+            BorderSizePixel = 1,
+            Parent = Holder_Frame_ContentHolder,
+            Size = UDim2.new(1, -20, 0, 20),
+            ZIndex = 4,
+            Font = "Code",
+            Text = "Config Name",
+            TextColor3 = Color3.fromRGB(205, 205, 205),
+            TextSize = 9,
+            TextXAlignment = "Left"
+        })
+        
+        local SaveButton = utility:RenderObject("TextButton", {
+            BackgroundColor3 = Color3.fromRGB(30, 30, 30),
+            BorderColor3 = Color3.fromRGB(12, 12, 12),
+            BorderSizePixel = 1,
+            Parent = Holder_Frame_ContentHolder,
+            Size = UDim2.new(1, -20, 0, 20),
+            ZIndex = 4,
+            Font = "Code",
+            Text = "Save Config",
+            TextColor3 = Color3.fromRGB(205, 205, 205),
+            TextSize = 9
+        })
+        
+        local LoadButton = utility:RenderObject("TextButton", {
+            BackgroundColor3 = Color3.fromRGB(30, 30, 30),
+            BorderColor3 = Color3.fromRGB(12, 12, 12),
+            BorderSizePixel = 1,
+            Parent = Holder_Frame_ContentHolder,
+            Size = UDim2.new(1, -20, 0, 20),
+            ZIndex = 4,
+            Font = "Code",
+            Text = "Load Config",
+            TextColor3 = Color3.fromRGB(205, 205, 205),
+            TextSize = 9
+        })
+        
+        local DeleteButton = utility:RenderObject("TextButton", {
+            BackgroundColor3 = Color3.fromRGB(30, 30, 30),
+            BorderColor3 = Color3.fromRGB(12, 12, 12),
+            BorderSizePixel = 1,
+            Parent = Holder_Frame_ContentHolder,
+            Size = UDim2.new(1, -20, 0, 20),
+            ZIndex = 4,
+            Font = "Code",
+            Text = "Delete Config",
+            TextColor3 = Color3.fromRGB(205, 205, 205),
+            TextSize = 9
+        })
+        
+        local ConfigList = utility:RenderObject("TextLabel", {
+            BackgroundColor3 = Color3.fromRGB(30, 30, 30),
+            BorderColor3 = Color3.fromRGB(12, 12, 12),
+            BorderSizePixel = 1,
+            Parent = Holder_Frame_ContentHolder,
+            Size = UDim2.new(1, -20, 0, 80),
+            ZIndex = 4,
+            Font = "Code",
+            Text = "Configs:\n",
+            TextColor3 = Color3.fromRGB(205, 205, 205),
+            TextSize = 9,
+            TextXAlignment = "Left",
+            TextYAlignment = "Top"
+        })
+        
+        local CloudCodeInput = utility:RenderObject("TextBox", {
+            BackgroundColor3 = Color3.fromRGB(30, 30, 30),
+            BorderColor3 = Color3.fromRGB(12, 12, 12),
+            BorderSizePixel = 1,
+            Parent = Holder_Frame_ContentHolder,
+            Size = UDim2.new(1, -20, 0, 20),
+            ZIndex = 4,
+            Font = "Code",
+            Text = "Cloud Code",
+            TextColor3 = Color3.fromRGB(205, 205, 205),
+            TextSize = 9,
+            TextXAlignment = "Left"
+        })
+        
+        local EncodeButton = utility:RenderObject("TextButton", {
+            BackgroundColor3 = Color3.fromRGB(30, 30, 30),
+            BorderColor3 = Color3.fromRGB(12, 12, 12),
+            BorderSizePixel = 1,
+            Parent = Holder_Frame_ContentHolder,
+            Size = UDim2.new(1, -20, 0, 20),
+            ZIndex = 4,
+            Font = "Code",
+            Text = "Generate Cloud Code",
+            TextColor3 = Color3.fromRGB(205, 205, 205),
+            TextSize = 9
+        })
+        
+        local DecodeButton = utility:RenderObject("TextButton", {
+            BackgroundColor3 = Color3.fromRGB(30, 30, 30),
+            BorderColor3 = Color3.fromRGB(12, 12, 12),
+            BorderSizePixel = 1,
+            Parent = Holder_Frame_ContentHolder,
+            Size = UDim2.new(1, -20, 0, 20),
+            ZIndex = 4,
+            Font = "Code",
+            Text = "Load Cloud Code",
+            TextColor3 = Color3.fromRGB(205, 205, 205),
+            TextSize = 9
+        })
+        
+        -- [[ // Config UI Connections // ]]
+        local function updateConfigList()
+            local configList = Section.ConfigSystem:GetConfigList()
+            ConfigList.Text = "Configs:\n" .. table.concat(configList, "\n")
+        end
+        
+        utility:CreateConnection(SaveButton.MouseButton1Click, function()
+            local name = ConfigNameInput.Text
+            if name ~= "" and name ~= "Config Name" then
+                Section.ConfigSystem:SaveConfig(name)
+                updateConfigList()
+            end
+        end)
+        
+        utility:CreateConnection(LoadButton.MouseButton1Click, function()
+            local name = ConfigNameInput.Text
+            if name ~= "" and name ~= "Config Name" then
+                Section.ConfigSystem:LoadConfig(name)
+            end
+        end)
+        
+        utility:CreateConnection(DeleteButton.MouseButton1Click, function()
+            local name = ConfigNameInput.Text
+            if name ~= "" and name ~= "Config Name" then
+                Section.ConfigSystem:DeleteConfig(name)
+                updateConfigList()
+            end
+        end)
+        
+        utility:CreateConnection(EncodeButton.MouseButton1Click, function()
+            local name = ConfigNameInput.Text
+            if name ~= "" and name ~= "Config Name" then
+                local code = Section.ConfigSystem:EncodeConfig(name)
+                if code then
+                    CloudCodeInput.Text = code
+                end
+            end
+        end)
+        
+        utility:CreateConnection(DecodeButton.MouseButton1Click, function()
+            local code = CloudCodeInput.Text
+            if code ~= "" and code ~= "Cloud Code" then
+                local configName = Section.ConfigSystem:DecodeConfig(code)
+                if configName then
+                    ConfigNameInput.Text = configName
+                    updateConfigList()
+                end
+            end
+        end)
+        
+        -- Initialize title inline size
+        Section_Holder_TitleInline.Size = UDim2.new(0, Section_Holder_Title.TextBounds.X + 6, 0, 2)
+        
+        -- Initial config list update
+        updateConfigList()
+        
+        -- Index setting
+        Section["Holder"] = Holder_Frame_ContentHolder
+        Section["Extra"] = Section_Holder_Extra
+    end
+    
+    return setmetatable(Section, sections)
+end
+
+-- Initialize config system
+library:InitConfigSystem()
+
+-- Add config section to config page
+config:CreateConfigSection({Name = "Config Manager", Size = 400, Side = "Left"})

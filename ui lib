@@ -83,6 +83,31 @@ contentStroke.Thickness = 1
 contentStroke.Color = Color3.new(0, 0, 0)
 contentStroke.Parent = contentFrame
 
+-- Variable to track the currently active tab
+local currentActiveTab = nil
+
+-- Function to reset the style of a tab
+local function resetTabStyle(tabButton)
+    if tabButton then
+        tabButton.BackgroundColor3 = Color3.new(1, 1, 1) -- White background
+        local textLabel = tabButton:FindFirstChild("Text")
+        if textLabel then
+            textLabel.TextColor3 = Color3.new(0, 0, 0) -- Black text
+        end
+    end
+end
+
+-- Function to apply the active style to a tab
+local function applyActiveTabStyle(tabButton)
+    if tabButton then
+        tabButton.BackgroundColor3 = Color3.new(0.3, 0.3, 0.3) -- Gray background for active tab
+        local textLabel = tabButton:FindFirstChild("Text")
+        if textLabel then
+            textLabel.TextColor3 = Color3.new(1, 1, 1) -- White text for active tab
+        end
+    end
+end
+
 -- Function to create a tab button and its content
 local function createTabButton(name, iconId, layoutOrder)
     -- Create the tab button
@@ -188,7 +213,7 @@ local function createTabButton(name, iconId, layoutOrder)
     rightInnerStroke.Color = Color3.new(0, 0, 0)
     rightInnerStroke.Parent = rightInnerFrame
 
-    -- Connect the tab button to show its content
+    -- Connect the tab button to show its content and update styles
     tabButton.MouseButton1Click:Connect(function()
         -- Hide all tab contents
         for _, child in ipairs(contentFrame:GetChildren()) do
@@ -198,6 +223,15 @@ local function createTabButton(name, iconId, layoutOrder)
         end
         -- Show this tab's content
         tabContent.Visible = true
+
+        -- Reset the style of the previously active tab
+        if currentActiveTab and currentActiveTab ~= tabButton then
+            resetTabStyle(currentActiveTab)
+        end
+
+        -- Apply the active style to the clicked tab
+        applyActiveTabStyle(tabButton)
+        currentActiveTab = tabButton
     end)
 
     return tabButton
@@ -264,7 +298,12 @@ UIS.InputChanged:Connect(function(input)
     end
 end)
 
--- Show the first tab's content by default
+-- Show the first tab's content by default and set it as active
 if contentFrame:FindFirstChild("Content_Rage") then
     contentFrame.Content_Rage.Visible = true
+    local firstTab = tabsContainer:FindFirstChild("TabButton_Rage")
+    if firstTab then
+        applyActiveTabStyle(firstTab)
+        currentActiveTab = firstTab
+    end
 end

@@ -147,6 +147,20 @@ local function createTabButton(name, iconId, layoutOrder)
     leftStroke.Color = Color3.new(0, 0, 0)
     leftStroke.Parent = leftSection
 
+    -- Add inner frame to left section
+    local leftInnerFrame = Instance.new("Frame")
+    leftInnerFrame.Name = "LeftInnerFrame"
+    leftInnerFrame.Size = UDim2.new(1, -10, 1, -10)
+    leftInnerFrame.Position = UDim2.new(0, 5, 0, 5)
+    leftInnerFrame.BackgroundColor3 = Color3.new(1, 1, 1)
+    leftInnerFrame.BorderSizePixel = 0
+    leftInnerFrame.Parent = leftSection
+
+    local leftInnerStroke = Instance.new("UIStroke")
+    leftInnerStroke.Thickness = 1
+    leftInnerStroke.Color = Color3.new(0, 0, 0)
+    leftInnerStroke.Parent = leftInnerFrame
+
     local rightSection = Instance.new("Frame")
     rightSection.Name = "RightSection"
     rightSection.Size = UDim2.new(0.5, -5, 1, -10)
@@ -159,6 +173,20 @@ local function createTabButton(name, iconId, layoutOrder)
     rightStroke.Thickness = 1
     rightStroke.Color = Color3.new(0, 0, 0)
     rightStroke.Parent = rightSection
+
+    -- Add inner frame to right section
+    local rightInnerFrame = Instance.new("Frame")
+    rightInnerFrame.Name = "RightInnerFrame"
+    rightInnerFrame.Size = UDim2.new(1, -10, 1, -10)
+    rightInnerFrame.Position = UDim2.new(0, 5, 0, 5)
+    rightInnerFrame.BackgroundColor3 = Color3.new(1, 1, 1)
+    rightInnerFrame.BorderSizePixel = 0
+    rightInnerFrame.Parent = rightSection
+
+    local rightInnerStroke = Instance.new("UIStroke")
+    rightInnerStroke.Thickness = 1
+    rightInnerStroke.Color = Color3.new(0, 0, 0)
+    rightInnerStroke.Parent = rightInnerFrame
 
     -- Connect the tab button to show its content
     tabButton.MouseButton1Click:Connect(function()

@@ -1,349 +1,242 @@
-local GuiService = game:GetService("GuiService")
-local UserInputService = game:GetService("UserInputService")
-local RunService = game:GetService("RunService")
-local TweenService = game:GetService("TweenService")
+local player = game.Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
 
--- Создаем основной ScreenGui
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "ClickGUI"
-ScreenGui.IgnoreGuiInset = true
-ScreenGui.Parent = game.Players.LocalPlayer.PlayerGui
+-- Create ScreenGui
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "MoltenClickGUI"
+screenGui.Parent = playerGui
 
--- Основной фрейм
-local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 600, 0, 600)
-MainFrame.Position = UDim2.new(0.5, -300, 0.5, -300)
-MainFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
-MainFrame.BorderSizePixel = 0
-MainFrame.ClipsDescendants = true
-MainFrame.Parent = ScreenGui
+-- Create MainFrame
+local mainFrame = Instance.new("Frame")
+mainFrame.Name = "MainFrame"
+mainFrame.Size = UDim2.new(0, 800, 0, 600)
+mainFrame.Position = UDim2.new(0.5, -400, 0.5, -300)
+mainFrame.BackgroundColor3 = Color3.new(1, 1, 1)
+mainFrame.BorderSizePixel = 0
+mainFrame.Parent = screenGui
 
--- Скругленные углы
-local UICorner = Instance.new("UICorner")
-UICorner.CornerRadius = UDim.new(0, 4)
-UICorner.Parent = MainFrame
+-- Add minimal rounded corners to MainFrame
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 5)
+corner.Parent = mainFrame
 
--- Тень
-local UIStroke = Instance.new("UIStroke")
-UIStroke.Thickness = 2
-UIStroke.Color = Color3.fromRGB(0, 0, 0)
-UIStroke.Transparency = 0.8
-UIStroke.Parent = MainFrame
+-- Add black inside outline to MainFrame
+local stroke = Instance.new("UIStroke")
+stroke.Thickness = 2
+stroke.Color = Color3.new(0, 0, 0)
+stroke.Parent = mainFrame
 
--- Заголовочная панель (для перетаскивания)
-local TitleBar = Instance.new("Frame")
-TitleBar.Name = "TitleBar"
-TitleBar.Size = UDim2.new(1, 0, 0, 40)
-TitleBar.BackgroundTransparency = 1
-TitleBar.Parent = MainFrame
+-- Create TitleLabel
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Name = "TitleLabel"
+titleLabel.Size = UDim2.new(1, 0, 0, 30)
+titleLabel.Position = UDim2.new(0, 0, 0, 0)
+titleLabel.BackgroundTransparency = 1
+titleLabel.Text = "molten.exe"
+titleLabel.TextColor3 = Color3.new(0, 0, 0)
+titleLabel.TextSize = 20
+titleLabel.Font = Enum.Font.SourceSansBold
+titleLabel.Parent = mainFrame
 
--- Контейнер для заголовка
-local TitleContainer = Instance.new("Frame")
-TitleContainer.Size = UDim2.new(0, 200, 0, 30)
-TitleContainer.Position = UDim2.new(0, 10, 0, 5)
-TitleContainer.BackgroundTransparency = 1
-TitleContainer.Parent = TitleBar
+-- Create Separator with gradient
+local separator = Instance.new("Frame")
+separator.Name = "Separator"
+separator.Size = UDim2.new(1, 0, 0, 2)
+separator.Position = UDim2.new(0, 0, 0, 30)
+separator.BorderSizePixel = 0
+separator.Parent = mainFrame
 
--- Текст до точки: "MOLTEN"
-local TitlePrefix = Instance.new("TextLabel")
-TitlePrefix.Size = UDim2.new(0, 100, 0, 30)
-TitlePrefix.BackgroundTransparency = 1
-TitlePrefix.Text = "MOLTEN"
-TitlePrefix.TextColor3 = Color3.fromRGB(255, 255, 255)
-TitlePrefix.Font = Enum.Font.SourceSansBold
-TitlePrefix.TextSize = 14
-TitlePrefix.TextXAlignment = Enum.TextXAlignment.Left
-TitlePrefix.Parent = TitleContainer
+local gradient = Instance.new("UIGradient")
+gradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.new(0, 0, 0)),
+    ColorSequenceKeypoint.new(1, Color3.new(1, 1, 1))
+}
+gradient.Parent = separator
 
--- Текст после точки: ".exe"
-local TitleSuffix = Instance.new("TextLabel")
-TitleSuffix.Size = UDim2.new(0, 100, 0, 30)
-TitleSuffix.BackgroundTransparency = 1
-TitleSuffix.Text = ".exe"
-TitleSuffix.TextColor3 = Color3.fromRGB(255, 255, 255)
-TitleSuffix.Font = Enum.Font.SourceSansBold
-TitleSuffix.TextSize = 18
-TitleSuffix.TextXAlignment = Enum.TextXAlignment.Left
-TitleSuffix.Parent = TitleContainer
+-- Create TabsContainer
+local tabsContainer = Instance.new("Frame")
+tabsContainer.Name = "TabsContainer"
+tabsContainer.Size = UDim2.new(1, 0, 0, 40)
+tabsContainer.Position = UDim2.new(0, 0, 0, 32)
+tabsContainer.BackgroundTransparency = 1
+tabsContainer.Parent = mainFrame
 
--- Динамическое позиционирование ".exe"
-local textBounds = TitlePrefix.TextBounds
-TitleSuffix.Position = UDim2.new(0, textBounds.X, 0, 0)
+-- Add UIListLayout to TabsContainer
+local tabsLayout = Instance.new("UIListLayout")
+tabsLayout.FillDirection = Enum.FillDirection.Horizontal
+tabsLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
+tabsLayout.VerticalAlignment = Enum.VerticalAlignment.Top
+tabsLayout.SortOrder = Enum.SortOrder.LayoutOrder
+tabsLayout.Parent = tabsContainer
 
--- Градиент для ".exe"
-local TitleGradient = Instance.new("UIGradient")
-TitleGradient.Color = ColorSequence.new({
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(144, 0, 255)),
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(144, 0, 255))
-})
-TitleGradient.Parent = TitleSuffix
+-- Create ContentFrame
+local contentFrame = Instance.new("Frame")
+contentFrame.Name = "ContentFrame"
+contentFrame.Size = UDim2.new(1, 0, 1, -72)
+contentFrame.Position = UDim2.new(0, 0, 0, 72)
+contentFrame.BackgroundColor3 = Color3.new(1, 1, 1)
+contentFrame.BorderSizePixel = 0
+contentFrame.Parent = mainFrame
 
--- Свечение для ".exe"
-local TitleStroke = Instance.new("UIStroke")
-TitleStroke.Thickness = 1
-TitleStroke.Color = Color3.fromRGB(0, 0, 0)
-TitleStroke.Transparency = 0.5
-TitleStroke.Parent = TitleSuffix
+local contentStroke = Instance.new("UIStroke")
+contentStroke.Thickness = 1
+contentStroke.Color = Color3.new(0, 0, 0)
+contentStroke.Parent = contentFrame
 
--- Контейнер для вкладок
-local TabContainer = Instance.new("Frame")
-TabContainer.Size = UDim2.new(1, -20, 0, 50)
-TabContainer.Position = UDim2.new(0, 10, 0, 40)
-TabContainer.BackgroundTransparency = 1
-TabContainer.Parent = MainFrame
+-- Function to create a tab button and its content
+local function createTabButton(name, iconId, layoutOrder)
+    -- Create the tab button
+    local tabButton = Instance.new("TextButton")
+    tabButton.Name = "TabButton_" .. name
+    tabButton.Size = UDim2.new(0, 100, 1, 0)
+    tabButton.BackgroundColor3 = Color3.new(1, 1, 1)
+    tabButton.Text = ""
+    tabButton.LayoutOrder = layoutOrder
+    tabButton.Parent = tabsContainer
+    
+    local tabStroke = Instance.new("UIStroke")
+    tabStroke.Thickness = 1
+    tabStroke.Color = Color3.new(0, 0, 0)
+    tabStroke.Parent = tabButton
+    
+    local layout = Instance.new("UIListLayout")
+    layout.FillDirection = Enum.FillDirection.Horizontal
+    layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    layout.VerticalAlignment = Enum.VerticalAlignment.Center
+    layout.Padding = UDim.new(0, 5)
+    layout.Parent = tabButton
+    
+    local icon = Instance.new("ImageLabel")
+    icon.Name = "Icon"
+    icon.Size = UDim2.new(0, 20, 0, 20)
+    icon.BackgroundTransparency = 1
+    icon.Image = "rbxassetid://" .. iconId
+    icon.Parent = tabButton
+    
+    local tabText = Instance.new("TextLabel")
+    tabText.Name = "Text"
+    tabText.Size = UDim2.new(0, 0, 0, 20)
+    tabText.BackgroundTransparency = 1
+    tabText.Text = name:lower()
+    tabText.TextColor3 = Color3.new(0, 0, 0)
+    tabText.TextSize = 14
+    tabText.Font = Enum.Font.SourceSans
+    tabText.AutomaticSize = Enum.AutomaticSize.X
+    tabText.Parent = tabButton
+    
+    -- Create the content frame for this tab
+    local tabContent = Instance.new("Frame")
+    tabContent.Name = "Content_" .. name
+    tabContent.Size = UDim2.new(1, 0, 1, 0)
+    tabContent.Position = UDim2.new(0, 0, 0, 0)
+    tabContent.BackgroundTransparency = 1
+    tabContent.Visible = false
+    tabContent.Parent = contentFrame
 
--- Список для вкладок
-local TabList = Instance.new("ScrollingFrame")
-TabList.Size = UDim2.new(1, 0, 1, 0)
-TabList.BackgroundTransparency = 1
-TabList.ScrollBarThickness = 2
-TabList.ScrollBarImageTransparency = 0.8
-TabList.ScrollBarImageColor3 = Color3.fromRGB(147, 112, 219)
-TabList.ScrollingDirection = Enum.ScrollingDirection.X
-TabList.CanvasSize = UDim2.new(0, 0, 0, 0)
-TabList.Parent = TabContainer
+    -- Create two sections inside the tab content
+    local leftSection = Instance.new("Frame")
+    leftSection.Name = "LeftSection"
+    leftSection.Size = UDim2.new(0.5, -5, 1, -10)
+    leftSection.Position = UDim2.new(0, 5, 0, 5)
+    leftSection.BackgroundColor3 = Color3.new(1, 1, 1)
+    leftSection.BorderSizePixel = 0
+    leftSection.Parent = tabContent
 
-local UIListLayout = Instance.new("UIListLayout")
-UIListLayout.FillDirection = Enum.FillDirection.Horizontal
-UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-UIListLayout.Padding = UDim.new(0, 8)
-UIListLayout.Parent = TabList
+    local leftStroke = Instance.new("UIStroke")
+    leftStroke.Thickness = 1
+    leftStroke.Color = Color3.new(0, 0, 0)
+    leftStroke.Parent = leftSection
 
--- Градиентная линия
-local GradientLine = Instance.new("Frame")
-GradientLine.Size = UDim2.new(1, -20, 0, 2)
-GradientLine.Position = UDim2.new(0, 10, 0, 90)
-GradientLine.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-GradientLine.BorderSizePixel = 0
-GradientLine.Parent = MainFrame
+    local rightSection = Instance.new("Frame")
+    rightSection.Name = "RightSection"
+    rightSection.Size = UDim2.new(0.5, -5, 1, -10)
+    rightSection.Position = UDim2.new(0.5, 0, 0, 5)
+    rightSection.BackgroundColor3 = Color3.new(1, 1, 1)
+    rightSection.BorderSizePixel = 0
+    rightSection.Parent = tabContent
 
-local UIGradient = Instance.new("UIGradient")
-UIGradient.Color = ColorSequence.new({
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(24, 24, 24)),
-    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(147, 112, 219)),
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(18, 18, 18))
-})
-UIGradient.Parent = GradientLine
+    local rightStroke = Instance.new("UIStroke")
+    rightStroke.Thickness = 1
+    rightStroke.Color = Color3.new(0, 0, 0)
+    rightStroke.Parent = rightSection
 
--- Контейнер для содержимого вкладок
-local ContentContainer = Instance.new("Frame")
-ContentContainer.Size = UDim2.new(1, -20, 1, -100 - 2)
-ContentContainer.Position = UDim2.new(0, 10, 0, 92)
-ContentContainer.BackgroundColor3 = Color3.fromRGB(24, 24, 24)
-ContentContainer.ClipsDescendants = true
-ContentContainer.Parent = MainFrame
-
-local ContentCorner = Instance.new("UICorner")
-ContentCorner.CornerRadius = UDim.new(0, 3)
-ContentCorner.Parent = ContentContainer
-
-local ContentOutline = Instance.new("UIStroke")
-ContentOutline.Thickness = 1
-ContentOutline.Color = Color3.fromRGB(50, 50, 50)
-ContentOutline.Parent = ContentContainer
-
--- Таблица для хранения вкладок
-local Tabs = {}
-local CurrentTab = nil
-
--- Функция для создания новой вкладки
-local function CreateTab(name)
-    local TabButton = Instance.new("TextButton")
-    TabButton.Size = UDim2.new(0, 120, 0, 40)
-    TabButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-    TabButton.Text = name
-    TabButton.TextColor3 = Color3.fromRGB(200, 200, 200)
-    TabButton.Font = Enum.Font.Gotham
-    TabButton.TextSize = 14
-    TabButton.Parent = TabList
-
-    local ButtonCorner = Instance.new("UICorner")
-    ButtonCorner.CornerRadius = UDim.new(0, 4)
-    ButtonCorner.Parent = TabButton
-
-    local ButtonStroke = Instance.new("UIStroke")
-    ButtonStroke.Thickness = 1
-    ButtonStroke.Color = Color3.fromRGB(50, 50, 50)
-    ButtonStroke.Transparency = 0.7
-    ButtonStroke.Parent = TabButton
-
-    -- Подчеркивание для активной вкладки
-    local ActiveIndicator = Instance.new("Frame")
-    ActiveIndicator.Size = UDim2.new(0, 0, 0, 3)
-    ActiveIndicator.Position = UDim2.new(0, 0, 1, -3)
-    ActiveIndicator.BackgroundColor3 = Color3.fromRGB(147, 112, 219)
-    ActiveIndicator.BorderSizePixel = 0
-    ActiveIndicator.Visible = false
-    ActiveIndicator.Parent = TabButton
-
-    local IndicatorGradient = Instance.new("UIGradient")
-    IndicatorGradient.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(147, 112, 219)),
-        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(200, 150, 255)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(147, 112, 219))
-    })
-    IndicatorGradient.Parent = ActiveIndicator
-
-    local TabContent = Instance.new("Frame")
-    TabContent.Size = UDim2.new(1, 0, 1, 0)
-    TabContent.BackgroundTransparency = 1
-    TabContent.Visible = false
-    TabContent.Parent = ContentContainer
-
-    local TabData = {
-        Button = TabButton,
-        Content = TabContent,
-        Name = name,
-        ActiveIndicator = ActiveIndicator,
-        Stroke = ButtonStroke
-    }
-
-    Tabs[name] = TabData
-
-    -- Обновление CanvasSize
-    TabList.CanvasSize = UDim2.new(0, UIListLayout.AbsoluteContentSize.X + 10, 0, 0)
-
-    -- Эффект для вкладок
-    local function UpdateTabVisuals(isActive)
-        local targetColor = isActive and Color3.fromRGB(60, 60, 60) or Color3.fromRGB(30, 30, 30)
-        local targetTextColor = isActive and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(200, 200, 200)
-        local targetStrokeColor = isActive and Color3.fromRGB(147, 112, 219) or Color3.fromRGB(50, 50, 50)
-        local targetStrokeTransparency = isActive and 0.3 or 0.7
-        local targetIndicatorSize = isActive and UDim2.new(1, 0, 0, 3) or UDim2.new(0, 0, 0, 3)
-
-        TweenService:Create(TabButton, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
-            BackgroundColor3 = targetColor,
-            TextColor3 = targetTextColor
-        }):Play()
-        TweenService:Create(ButtonStroke, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
-            Color = targetStrokeColor,
-            Transparency = targetStrokeTransparency
-        }):Play()
-        TweenService:Create(ActiveIndicator, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {
-            Size = targetIndicatorSize
-        }):Play()
-        ActiveIndicator.Visible = isActive
-    end
-
-    -- Ховер эффект
-    TabButton.MouseEnter:Connect(function()
-        if CurrentTab ~= TabData then
-            TweenService:Create(TabButton, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
-                BackgroundColor3 = Color3.fromRGB(40, 40, 40),
-                TextColor3 = Color3.fromRGB(220, 220, 220)
-            }):Play()
-            TweenService:Create(ButtonStroke, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
-                Transparency = 0.5
-            }):Play()
-        end
-    end)
-
-    TabButton.MouseLeave:Connect(function()
-        if CurrentTab ~= TabData then
-            TweenService:Create(TabButton, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
-                BackgroundColor3 = Color3.fromRGB(30, 30, 30),
-                TextColor3 = Color3.fromRGB(200, 200, 200)
-            }):Play()
-            TweenService:Create(ButtonStroke, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
-                Transparency = 0.7
-            }):Play()
-        end
-    end)
-
-    -- Обработчик клика
-    TabButton.MouseButton1Click:Connect(function()
-        if CurrentTab ~= TabData then
-            if CurrentTab then
-                CurrentTab.Content.Visible = false
-                Tabs[CurrentTab.Name].UpdateVisuals(false)
+    -- Connect the tab button to show its content
+    tabButton.MouseButton1Click:Connect(function()
+        -- Hide all tab contents
+        for _, child in ipairs(contentFrame:GetChildren()) do
+            if child:IsA("Frame") then
+                child.Visible = false
             end
-            TabData.Content.Visible = true
-            TabData.UpdateVisuals(true)
-            CurrentTab = TabData
         end
+        -- Show this tab's content
+        tabContent.Visible = true
     end)
 
-    -- Сохраняем функцию обновления визуалов
-    TabData.UpdateVisuals = UpdateTabVisuals
-
-    return TabContent
+    return tabButton
 end
 
--- Функция для добавления контента
-local function AddToTab(tabName, content)
-    if Tabs[tabName] then
-        content.Parent = Tabs[tabName].Content
+-- Clear any existing children in tabsContainer to avoid duplicates
+for _, child in ipairs(tabsContainer:GetChildren()) do
+    if child:IsA("GuiObject") then
+        child:Destroy()
     end
 end
 
--- Исправленная система Drag and Drop
-local Dragging = false
-local DragStart = nil
-local StartPos = nil
-
-TitleBar.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        Dragging = true
-        DragStart = input.Position
-        StartPos = MainFrame.Position
-    end
-end)
-
-UserInputService.InputChanged:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseMovement and Dragging then
-        local Delta = input.Position - DragStart
-        local newPos = UDim2.new(
-            StartPos.X.Scale,
-            StartPos.X.Offset + Delta.X,
-            StartPos.Y.Scale,
-            StartPos.Y.Offset + Delta.Y
-        )
-        MainFrame.Position = newPos
-    end
-end)
-
-UserInputService.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        Dragging = false
-    end
-end)
-
--- Создание тестовых вкладок
-local tabNames = {
-    "Main",
-    "Settings",
-    "Scripts",
-    "Console",
-    "Explorer",
-    "Variables",
-    "Functions",
-    "Logs",
-    "Debugger",
-    "Tools"
+-- Define the tabs with their names and icon IDs in the correct order
+local tabs = {
+    {name = "Rage", icon = "80111464738064"},
+    {name = "Legit", icon = "120777153021476"},
+    {name = "Visuals", icon = "129492097727596"},
+    {name = "Movement", icon = "88552041142395"},
+    {name = "Misc", icon = "101233326573754"},
+    {name = "Target", icon = "125548071823133"},
+    {name = "Settings", icon = "90578457475613"},
+    {name = "Hud", icon = "133969573254874"}
 }
 
-for _, name in ipairs(tabNames) do
-    local tab = CreateTab(name)
-    local label = Instance.new("TextLabel")
-    label.Size = UDim2.new(0, 200, 0, 50)
-    label.Position = UDim2.new(0, 10, 0, 10)
-    label.BackgroundTransparency = 1
-    label.Text = "Welcome to " .. name .. " Tab!"
-    label.TextColor3 = Color3.fromRGB(255, 255, 255)
-    label.Font = Enum.Font.Gotham
-    label.TextSize = 16
-    AddToTab(name, label)
+-- Create all eight tabs in the desired order with explicit LayoutOrder
+for i, tab in ipairs(tabs) do
+    createTabButton(tab.name, tab.icon, i)
 end
 
--- Активируем первую вкладку
-if Tabs["Main"] then
-    Tabs["Main"].Button.MouseButton1Click:Fire()
+-- Drag and Drop functionality
+local UIS = game:GetService("UserInputService")
+local dragging = false
+local dragInput
+local dragStart
+local startPos
+
+local function updateInput(input)
+    local delta = input.Position - dragStart
+    mainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
 end
 
--- Возвращаем функции
-return {
-    CreateTab = CreateTab,
-    AddToTab = AddToTab,
-    MainFrame = MainFrame,
-    ScreenGui = ScreenGui
-}
+mainFrame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        startPos = mainFrame.Position
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+mainFrame.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement then
+        dragInput = input
+    end
+end)
+
+UIS.InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+        updateInput(input)
+    end
+end)
+
+-- Show the first tab's content by default
+if contentFrame:FindFirstChild("Content_Rage") then
+    contentFrame.Content_Rage.Visible = true
+end

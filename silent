@@ -1,8 +1,9 @@
 -- SETTINGS
 local Keybind = Enum.KeyCode.C
 local JumpOffset = 0.07
-local FallOffset = 0.07 -- Новый параметр для падения
+local FallOffset = 0.07 -- Параметр для падения
 local Prediction = 0.141245121
+local PredictionMode = "MoveDirection" -- Режим предсказания: "Velocity", "MoveDirection", "CalculateCFrame"
 local TracerColor = Color3.fromRGB(255, 50, 50) -- Цвет трейсера
 local TracerThickness = 1.5                     -- Толщина линии
 local TracerTransparency = 0.7                  -- Прозрачность
@@ -20,6 +21,8 @@ local Mouse = LocalPlayer:GetMouse()
 local Target = nil
 local Character = LocalPlayer.Character
 local TracerLine = nil
+local LastPosition = nil -- Для CalculateCFrame
+local LastTime = nil    -- Для CalculateCFrame
 
 -- Создаем трейсер через Drawing API
 local function CreateTracer()
@@ -31,28 +34,66 @@ local function CreateTracer()
     TracerLine.Visible = false
 end
 
+-- Функция предсказания позиции
+local function PredictPosition(targetRoot, humanoid)
+    if not targetRoot or not humanoid then return targetRoot and targetRoot.Position or Vector3.new() end
+    
+    local position = targetRoot.Position
+    local velocity = targetRoot.Velocity
+    
+    -- Выбираем offset в зависимости от направления движения
+    local verticalOffset
+    if velocity.Y > 0 then
+        verticalOffset = velocity.Y * JumpOffset -- Для прыжка
+    elseif velocity.Y < 0 then
+        verticalOffset = velocity.Y * FallOffset -- Для падения
+    else
+        verticalOffset = 0 -- Нет вертикального движения
+    end
+    
+    if PredictionMode == "Velocity" then
+        return position + (velocity * Prediction) + Vector3.new(0, verticalOffset, 0)
+    elseif PredictionMode == "MoveDirection" then
+        local moveDirection = humanoid.MoveDirection
+        if moveDirection ~= Vector3.new() then
+            return position + (moveDirection.Unit * (Prediction * 10)) + Vector3.new(0, verticalOffset, 0)
+        end
+        return position + Vector3.new(0, verticalOffset, 0)
+    elseif PredictionMode == "CalculateCFrame" then
+        local currentTime = tick()
+        local deltaTime = currentTime - (LastTime or currentTime)
+        
+        if not LastPosition or (position - LastPosition).Magnitude < 0.001 then
+            LastPosition = position
+            LastTime = currentTime
+            return position + Vector3.new(0, verticalOffset, 0)
+        end
+        
+        local distance = (position - LastPosition).Magnitude
+        local speed = (distance / deltaTime) * (0.1 * (Prediction * 10))
+        local predictedPos = position + (position - LastPosition).Unit * speed
+        local verticalSpeed = (position.Y - LastPosition.Y) / deltaTime * (0.1 * Prediction)
+        predictedPos = predictedPos + Vector3.new(0, verticalSpeed + verticalOffset, 0)
+        
+        LastPosition = position
+        LastTime = currentTime
+        return predictedPos
+    end
+    
+    return position + Vector3.new(0, verticalOffset, 0)
+end
+
 -- Обновляем позицию трейсера (вызывается каждый кадр)
 local function UpdateTracer()
     if not TracerLine or not Target or not Character then return end
     
     local Head = Character:FindFirstChild("Head")
     local TargetRoot = Target.Character and Target.Character:FindFirstChild("HumanoidRootPart")
+    local TargetHumanoid = Target.Character and Target.Character:FindFirstChild("Humanoid")
     
-    if Head and TargetRoot then
-        -- Выбираем offset в зависимости от направления движения
-        local VerticalOffset
-        if TargetRoot.Velocity.Y > 0 then
-            VerticalOffset = TargetRoot.Velocity.Y * JumpOffset -- Для прыжка
-        elseif TargetRoot.Velocity.Y < 0 then
-            VerticalOffset = TargetRoot.Velocity.Y * FallOffset -- Для падения
-        else
-            VerticalOffset = 0 -- Нет вертикального движения
-        end
-        
-        -- Предсказанная позиция с учетом скорости и VerticalOffset
-        local PredictedPos = TargetRoot.Position + 
-                            (TargetRoot.Velocity * Prediction) + 
-                            Vector3.new(0, VerticalOffset, 0)
+    if Head and TargetRoot and TargetHumanoid then
+        -- Предсказанная позиция
+        local PredictedPos = PredictPosition(TargetRoot, TargetHumanoid)
         
         -- Преобразуем 3D-позиции в 2D-координаты экрана
         local HeadScreenPos, HeadVisible = Camera:WorldToViewportPoint(Head.Position)
@@ -73,7 +114,7 @@ end
 -- Подключение обновления трейсера к RenderStepped
 RunService.RenderStepped:Connect(UpdateTracer)
 
--- Функция для поиска ближайшего игрока к курсору (без изменений)
+-- Функция для поиска ближайшего игрока к курсору
 local function GetClosestToMouse()
     local ClosestTarget, ClosestDistance = nil, math.huge
     for _, player in pairs(Players:GetPlayers()) do
@@ -104,6 +145,8 @@ UserInputService.InputBegan:Connect(function(Input, gameProcessedEvent)
         else
             warn("Unlocked from: " .. Target.Name)
             Target = nil
+            LastPosition = nil -- Сбрасываем для CalculateCFrame
+            LastTime = nil     -- Сбрасываем для CalculateCFrame
             if TracerLine then
                 TracerLine.Visible = false
             end
@@ -117,21 +160,13 @@ local function SetupCharacter(char)
     char.ChildAdded:Connect(function(tool)
         if tool:IsA("Tool") then
             tool.Activated:Connect(function()
-                if Target and Target.Character and Target.Character:FindFirstChild("HumanoidRootPart") then
-                    local Hit = Target.Character.HumanoidRootPart.CFrame.Position
-                    local PlayerVelocity = Target.Character.HumanoidRootPart.Velocity
-                    -- Выбираем offset в зависимости от направления движения
-                    local VerticalOffset
-                    if PlayerVelocity.Y > 0 then
-                        VerticalOffset = PlayerVelocity.Y * JumpOffset -- Для прыжка
-                    elseif PlayerVelocity.Y < 0 then
-                        VerticalOffset = PlayerVelocity.Y * FallOffset -- Для падения
-                    else
-                        VerticalOffset = 0 -- Нет вертикального движения
-                    end
+                if Target and Target.Character and Target.Character:FindFirstChild("HumanoidRootPart") and Target.Character:FindFirstChild("Humanoid") then
+                    local TargetRoot = Target.Character.HumanoidRootPart
+                    local TargetHumanoid = Target.Character.Humanoid
+                    local PredictedPos = PredictPosition(TargetRoot, TargetHumanoid)
                     ReplicatedStorage.MainEvent:FireServer(
                         "UpdateMousePos", 
-                        Hit + (PlayerVelocity * Prediction) + Vector3.new(0, VerticalOffset, 0)
+                        PredictedPos
                     )
                 end
             end)

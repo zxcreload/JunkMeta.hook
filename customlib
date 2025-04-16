@@ -1517,118 +1517,118 @@ Library.Sections.__index = Library.Sections;
 			return setmetatable(Weapon, Library.Pages)
         end
 		--
-    function Pages:Section(Options)
-        local Section = {
+		function Pages:Section(Options)
+    local Section = {
+        Window = self.Window,
+        Page = self,
+        Name = Options.Name or Options.name or "Section",
+        Size = Options.Size or Options.size or 150,
+        Side = Options.Side or Options.side or "Left",
+        Elements = {},
+    }
+    local SectionTab = Section.Side == "Left" and Section.Page.Left or Section.Page.Right
+    local SectionCount = Section.Side == "Left" and (#Section.Page.Left.Sections + 1) or (#Section.Page.Right.Sections + 1)
+
+    -- Создаем основной контейнер секции
+    local SectionHolder = Instance.new('Frame', SectionTab)
+    local SectionTitle = Instance.new('TextLabel', SectionHolder)
+    local SectionContent = Instance.new('ScrollingFrame', SectionHolder) -- Заменяем Frame на ScrollingFrame
+    local UIListLayout = Instance.new('UIListLayout', SectionContent)
+    local UIPadding = Instance.new('UIPadding', SectionContent)
+
+    -- Настройка SectionHolder
+    SectionHolder.Name = "SectionHolder"
+    SectionHolder.Size = UDim2.new(1, -10, 0, Section.Size)
+    SectionHolder.BackgroundColor3 = Color3.new(0.0784314, 0.0784314, 0.0784314)
+    SectionHolder.BorderColor3 = Color3.new(0, 0, 0)
+    SectionHolder.Position = UDim2.new(0, 5, 0, 5 + (SectionCount * 155))
+
+    -- Настройка SectionTitle
+    SectionTitle.Name = "SectionTitle"
+    SectionTitle.Size = UDim2.new(1, 0, 0, 15)
+    SectionTitle.BackgroundColor3 = Color3.new(1, 1, 1)
+    SectionTitle.BackgroundTransparency = 1
+    SectionTitle.BorderSizePixel = 0
+    SectionTitle.BorderColor3 = Color3.new(0, 0, 0)
+    SectionTitle.Text = Section.Name
+    SectionTitle.TextColor3 = Color3.new(1, 1, 1)
+    SectionTitle.FontFace = Font.new("rbxassetid://12187371840")
+    SectionTitle.TextSize = 12
+    SectionTitle.TextStrokeTransparency = 0
+    SectionTitle.TextXAlignment = Enum.TextXAlignment.Left
+
+    -- Настройка ScrollingFrame (SectionContent)
+    SectionContent.Name = "SectionContent"
+    SectionContent.Position = UDim2.new(0, 0, 0, 15)
+    SectionContent.Size = UDim2.new(1, 0, 1, -15)
+    SectionContent.BackgroundColor3 = Color3.new(1, 1, 1)
+    SectionContent.BackgroundTransparency = 1
+    SectionContent.BorderSizePixel = 0
+    SectionContent.BorderColor3 = Color3.new(0, 0, 0)
+    SectionContent.CanvasSize = UDim2.new(0, 0, 0, 0) -- Начальный размер канваса
+    SectionContent.ScrollBarThickness = 3
+    SectionContent.ScrollBarImageColor3 = Library.Accent
+    SectionContent.ScrollingDirection = Enum.ScrollingDirection.Y
+    SectionContent.AutomaticCanvasSize = Enum.AutomaticSize.Y -- Автоматическая подстройка размера канваса
+    SectionContent.ClipsDescendants = true -- Обрезка содержимого за пределами
+
+    -- Настройка UIListLayout
+    UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    UIListLayout.Padding = UDim.new(0, 2)
+
+    -- Настройка UIPadding
+    UIPadding.PaddingLeft = UDim.new(0, 5)
+    UIPadding.PaddingRight = UDim.new(0, 5)
+    UIPadding.PaddingTop = UDim.new(0, 5)
+    UIPadding.PaddingBottom = UDim.new(0, 5)
+
+    -- Сохраняем элементы для дальнейшего использования
+    Section.Elements = {
+        SectionContent = SectionContent,
+        SectionHolder = SectionHolder,
+    }
+
+    -- Добавляем секцию в соответствующую сторону
+    if Section.Side == "Left" then
+        table.insert(self.Left.Sections, Section)
+    else
+        table.insert(self.Right.Sections, Section)
+    end
+
+    -- Функции для элементов секции (оставляем без изменений)
+    function Section:Toggle(Properties)
+        local Properties = Properties or {}
+        local Toggle = {
             Window = self.Window,
-            Page = self,
-            Name = Options.Name or Options.name or "Section",
-            Size = Options.Size or Options.size or 150,
-            Side = Options.Side or Options.side or "Left",
-            Elements = {},
+            Page = self.Page,
+            Section = self,
+            Name = Properties.Name or Properties.name or "Toggle",
+            State = (
+                Properties.state
+                    or Properties.State
+                    or Properties.def
+                    or Properties.Def
+                    or Properties.default
+                    or Properties.Default
+                    or false
+            ),
+            Callback = (
+                Properties.callback
+                or Properties.Callback
+                or Properties.callBack
+                or Properties.CallBack
+                or function() end
+            ),
+            Flag = (
+                Properties.flag
+                or Properties.Flag
+                or Properties.pointer
+                or Properties.Pointer
+                or Library.NextFlag()
+            ),
+            Toggled = false,
+            Colorpickers = 0,
         }
-        local SectionTab = Section.Side == "Left" and Section.Page.Left or Section.Page.Right
-        local SectionCount = Section.Side == "Left" and (#Section.Page.Left.Sections + 1) or (#Section.Page.Right.Sections + 1)
-
-        -- Создаем основной контейнер секции
-        local SectionHolder = Instance.new('Frame', SectionTab)
-        local SectionTitle = Instance.new('TextLabel', SectionHolder)
-        local SectionContent = Instance.new('ScrollingFrame', SectionHolder) -- Заменяем Frame на ScrollingFrame
-        local UIListLayout = Instance.new('UIListLayout', SectionContent)
-        local UIPadding = Instance.new('UIPadding', SectionContent)
-
-        -- Настройка SectionHolder
-        SectionHolder.Name = "SectionHolder"
-        SectionHolder.Size = UDim2.new(1, -10, 0, Section.Size)
-        SectionHolder.BackgroundColor3 = Color3.new(0.0784314, 0.0784314, 0.0784314)
-        SectionHolder.BorderColor3 = Color3.new(0, 0, 0)
-        SectionHolder.Position = UDim2.new(0, 5, 0, 5 + (SectionCount * 155))
-
-        -- Настройка SectionTitle
-        SectionTitle.Name = "SectionTitle"
-        SectionTitle.Size = UDim2.new(1, 0, 0, 15)
-        SectionTitle.BackgroundColor3 = Color3.new(1, 1, 1)
-        SectionTitle.BackgroundTransparency = 1
-        SectionTitle.BorderSizePixel = 0
-        SectionTitle.BorderColor3 = Color3.new(0, 0, 0)
-        SectionTitle.Text = Section.Name
-        SectionTitle.TextColor3 = Color3.new(1, 1, 1)
-        SectionTitle.FontFace = Font.new("rbxassetid://12187371840")
-        SectionTitle.TextSize = 12
-        SectionTitle.TextStrokeTransparency = 0
-        SectionTitle.TextXAlignment = Enum.TextXAlignment.Left
-
-        -- Настройка ScrollingFrame (SectionContent)
-        SectionContent.Name = "SectionContent"
-        SectionContent.Position = UDim2.new(0, 0, 0, 15)
-        SectionContent.Size = UDim2.new(1, 0, 1, -15)
-        SectionContent.BackgroundColor3 = Color3.new(1, 1, 1)
-        SectionContent.BackgroundTransparency = 1
-        SectionContent.BorderSizePixel = 0
-        SectionContent.BorderColor3 = Color3.new(0, 0, 0)
-        SectionContent.CanvasSize = UDim2.new(0, 0, 0, 0) -- Начальный размер канваса
-        SectionContent.ScrollBarThickness = 3
-        SectionContent.ScrollBarImageColor3 = Library.Accent
-        SectionContent.ScrollingDirection = Enum.ScrollingDirection.Y
-        SectionContent.AutomaticCanvasSize = Enum.AutomaticSize.Y -- Автоматическая подстройка размера канваса
-        SectionContent.ClipsDescendants = true -- Обрезка содержимого за пределами
-
-        -- Настройка UIListLayout
-        UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-        UIListLayout.Padding = UDim.new(0, 2)
-
-        -- Настройка UIPadding
-        UIPadding.PaddingLeft = UDim.new(0, 5)
-        UIPadding.PaddingRight = UDim.new(0, 5)
-        UIPadding.PaddingTop = UDim.new(0, 5)
-        UIPadding.PaddingBottom = UDim.new(0, 5)
-
-        -- Сохраняем элементы для дальнейшего использования
-        Section.Elements = {
-            SectionContent = SectionContent,
-            SectionHolder = SectionHolder,
-        }
-
-        -- Добавляем секцию в соответствующую сторону
-        if Section.Side == "Left" then
-            table.insert(self.Left.Sections, Section)
-        else
-            table.insert(self.Right.Sections, Section)
-        end
-
-        -- Функции для элементов секции (оставляем без изменений)
-        function Section:Toggle(Properties)
-            local Properties = Properties or {}
-            local Toggle = {
-                Window = self.Window,
-                Page = self.Page,
-                Section = self,
-                Name = Properties.Name or Properties.name or "Toggle",
-                State = (
-                    Properties.state
-                        or Properties.State
-                        or Properties.def
-                        or Properties.Def
-                        or Properties.default
-                        or Properties.Default
-                        or false
-                ),
-                Callback = (
-                    Properties.callback
-                    or Properties.Callback
-                    or Properties.callBack
-                    or Properties.CallBack
-                    or function() end
-                ),
-                Flag = (
-                    Properties.flag
-                    or Properties.Flag
-                    or Properties.pointer
-                    or Properties.Pointer
-                    or Library.NextFlag()
-                ),
-                Toggled = false,
-                Colorpickers = 0,
-            }
 			--
 			local NewToggle = Instance.new('TextButton', Toggle.Section.Elements.SectionContent)
 			local Outline = Instance.new('Frame', NewToggle)
@@ -3374,3 +3374,5 @@ Library.Sections.__index = Library.Sections;
 		end
         return Library
 	end
+end 
+return Section

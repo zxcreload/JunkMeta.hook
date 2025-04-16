@@ -1,0 +1,433 @@
+local rs, uis, plrs, cam = game:GetService("RunService"), game:GetService("UserInputService"), game:GetService("Players"), workspace.CurrentCamera
+local lp = plrs.LocalPlayer
+local chr = lp.Character or lp.CharacterAdded:Wait()
+local hrp, hum = nil, nil
+local yaw, tgt_yaw, last, flick, flick_t = 0, 0, 0, false, 0
+local follow_part, ghost_model = nil, nil
+
+-- Настройки
+local cfg = {
+    on = false,
+    desync = false,
+    mode = "Spinbot",
+    desync_mode = "DesyncAA",
+    desync_interval = 0.0001, -- Частота десинхронизации (секунды)
+    desync_settings = {
+        Mirror = {}, -- Зеркальный поворот (противоположный угол)
+        DesyncAA = {}, -- Анти-аим только на призраке
+        Custom = {
+            pos = Vector3.new(5, 0, 5), -- Смещение по X, Y, Z
+            yaw = 90, -- Угол yaw для призрака (градусы)
+            angles = Vector3.new(0, 0, 0) -- Поворот по pitch, yaw, roll (градусы)
+        }
+    },
+    ghost_settings = {
+        torso_size = Vector3.new(2, 2, 1),
+        head_size = Vector3.new(1, 1, 1),
+        limb_size = Vector3.new(1, 2, 1),
+        transparency = 0, -- Полностью видимый призрак
+        part_color = BrickColor.new("Light blue"),
+        material = Enum.Material.ForceField,
+        highlight_fill_color = Color3.fromRGB(0, 170, 255), -- Исходный цвет (голубой)
+        highlight_fill_color_active = Color3.fromRGB(0, 255, 0), -- Цвет при активном десинхе (зелёный)
+        highlight_outline_color = Color3.fromRGB(0, 255, 255),
+        highlight_fill_transparency = 0.5,
+        highlight_outline_transparency = 0
+    },
+    modes = {
+        Spinbot = {
+            speed = 360, -- Градусы/сек
+            smooth = 0.5,
+            cam = false,
+            cam_offset = 0,
+            dir = 1
+        },
+        Jitter = {
+            angle = 45,
+            speed = 10,
+            smooth = 0.3,
+            cam = true,
+            cam_offset = 0
+        },
+        MultiWays = {
+            ways = 5,
+            angles = {0, 72, 144, 216, 288},
+            speed = 5,
+            smooth = 0.4,
+            cam = false,
+            cam_offset = 0
+        },
+        Backward = {
+            smooth = 0.2,
+            cam = true,
+            cam_offset = 180
+        },
+        Random = {
+            min = -180,
+            max = 180,
+            int = 0.2,
+            smooth = 0.3,
+            cam = false,
+            cam_offset = 0
+        },
+        Sway = {
+            angle = 30,
+            speed = 2,
+            smooth = 0.6,
+            cam = true,
+            cam_offset = 0
+        },
+        Static = {
+            angle = 0,
+            smooth = 0.1,
+            cam = false,
+            cam_offset = 0
+        },
+        Pulse = {
+            a1 = 30,
+            a2 = -30,
+            speed = 4,
+            smooth = 0.4,
+            cam = true,
+            cam_offset = 0
+        },
+        Flick = {
+            angle = 90,
+            int = 0.5,
+            dur = 0.1,
+            smooth = 0.2,
+            cam = false,
+            cam_offset = 0
+        },
+        Lisp = {
+            fast_a = 45,
+            slow_a = 15,
+            fast_i = 0.1,
+            slow_i = 0.3,
+            smooth = 0.3,
+            cam = true,
+            cam_offset = 0
+        }
+    }
+}
+
+-- Получение угла камеры (yaw)
+local function get_cam_yaw()
+    local look_vector = cam.CFrame.LookVector
+    local yaw = math.atan2(-look_vector.X, -look_vector.Z)
+    return math.deg(yaw)
+end
+
+-- Интерполяция
+local function lerp(a, b, t)
+    return a + (b - a) * math.min(t, 1)
+end
+
+-- Управление AutoRotate
+local function update_auto_rotate()
+    if hum then
+        hum.AutoRotate = not cfg.on
+    end
+end
+
+-- Создание FollowPart для камеры
+local function create_follow_part()
+    local part = Instance.new("Part")
+    part.Name = "FollowPart"
+    part.Anchored = true
+    part.CanCollide = false
+    part.Transparency = 1
+    part.Size = Vector3.new(0.1, 0.1, 0.1)
+    part.Parent = workspace
+    return part
+end
+
+-- Создание модели призрака
+local function create_ghost()
+    local model = Instance.new("Model")
+    model.Name = "GhostModel"
+    model.Parent = workspace
+
+    local torso = Instance.new("Part")
+    torso.Name = "Torso"
+    torso.Size = cfg.ghost_settings.torso_size
+    torso.Anchored = true
+    torso.CanCollide = false
+    torso.Transparency = cfg.ghost_settings.transparency
+    torso.BrickColor = cfg.ghost_settings.part_color
+    torso.Material = cfg.ghost_settings.material
+    torso.Parent = model
+
+    local head = Instance.new("Part")
+    head.Name = "Head"
+    head.Size = cfg.ghost_settings.head_size
+    head.Position = torso.Position + Vector3.new(0, 1.5, 0)
+    head.Anchored = true
+    head.CanCollide = false
+    head.Transparency = cfg.ghost_settings.transparency
+    head.BrickColor = cfg.ghost_settings.part_color
+    head.Material = cfg.ghost_settings.material
+    head.Parent = model
+
+    local left_arm = Instance.new("Part")
+    left_arm.Name = "LeftArm"
+    left_arm.Size = cfg.ghost_settings.limb_size
+    left_arm.Position = torso.Position + Vector3.new(-1.5, 0, 0)
+    left_arm.Anchored = true
+    left_arm.CanCollide = false
+    left_arm.Transparency = cfg.ghost_settings.transparency
+    left_arm.BrickColor = cfg.ghost_settings.part_color
+    left_arm.Material = cfg.ghost_settings.material
+    left_arm.Parent = model
+
+    local right_arm = Instance.new("Part")
+    right_arm.Name = "RightArm"
+    right_arm.Size = cfg.ghost_settings.limb_size
+    right_arm.Position = torso.Position + Vector3.new(1.5, 0, 0)
+    right_arm.Anchored = true
+    right_arm.CanCollide = false
+    right_arm.Transparency = cfg.ghost_settings.transparency
+    right_arm.BrickColor = cfg.ghost_settings.part_color
+    right_arm.Material = cfg.ghost_settings.material
+    right_arm.Parent = model
+
+    local left_leg = Instance.new("Part")
+    left_leg.Name = "LeftLeg"
+    left_leg.Size = cfg.ghost_settings.limb_size
+    left_leg.Position = torso.Position + Vector3.new(-0.5, -2, 0)
+    left_leg.Anchored = true
+    left_leg.CanCollide = false
+    left_leg.Transparency = cfg.ghost_settings.transparency
+    left_leg.BrickColor = cfg.ghost_settings.part_color
+    left_leg.Material = cfg.ghost_settings.material
+    left_leg.Parent = model
+
+    local right_leg = Instance.new("Part")
+    right_leg.Name = "RightLeg"
+    right_leg.Size = cfg.ghost_settings.limb_size
+    right_leg.Position = torso.Position + Vector3.new(0.5, -2, 0)
+    right_leg.Anchored = true
+    right_leg.CanCollide = false
+    right_leg.Transparency = cfg.ghost_settings.transparency
+    right_leg.BrickColor = cfg.ghost_settings.part_color
+    right_leg.Material = cfg.ghost_settings.material
+    right_leg.Parent = model
+
+    model.PrimaryPart = torso
+
+    local highlight = Instance.new("Highlight")
+    highlight.Name = "GhostHighlight"
+    highlight.FillTransparency = cfg.ghost_settings.highlight_fill_transparency
+    highlight.OutlineTransparency = cfg.ghost_settings.highlight_outline_transparency
+    highlight.FillColor = cfg.ghost_settings.highlight_fill_color
+    highlight.OutlineColor = cfg.ghost_settings.highlight_outline_color
+    highlight.Parent = model
+
+    return model
+end
+
+-- Обновление FollowPart и GhostModel
+local function setup_desync(character)
+    if follow_part then
+        follow_part:Destroy()
+    end
+    if ghost_model then
+        ghost_model:Destroy()
+    end
+    follow_part = create_follow_part()
+    ghost_model = create_ghost()
+    if ghost_model then
+        local highlight = ghost_model:FindFirstChild("GhostHighlight")
+        if highlight then
+            highlight.FillColor = cfg.desync and cfg.ghost_settings.highlight_fill_color_active or cfg.ghost_settings.highlight_fill_color
+        end
+    end
+end
+
+-- Применение десинхронизации
+local function apply_desync(delta_time)
+    if not chr or not hrp or not hum or not cam or not follow_part or not ghost_model then
+        return
+    end
+
+    -- Применяем десинх только при движении персонажа
+    if hrp.Velocity.Magnitude <= 0 then
+        return
+    end
+
+    -- Сохраняем исходный CFrame игрока
+    local original_cframe = hrp.CFrame
+    local player_yaw = math.deg((original_cframe - original_cframe.Position).LookVector:Angle(Vector3.new(0, 0, -1), Vector3.new(0, 1, 0)))
+
+    -- Вычисляем угол анти-аима
+    local base_yaw = cfg.modes[cfg.mode].cam and get_cam_yaw() or 0
+    local offset = cfg.modes[cfg.mode].cam and cfg.modes[cfg.mode].cam_offset or 0
+    local aa_yaw = base_yaw + yaw + offset
+
+    -- Вычисляем CFrame для призрака
+    local desync_cframe
+    if cfg.desync_mode == "Mirror" then
+        -- Зеркальный поворот: противоположный угол анти-аима
+        local mirror_yaw = aa_yaw - 180
+        desync_cframe = CFrame.new(original_cframe.Position) * CFrame.Angles(0, math.rad(mirror_yaw), 0)
+    elseif cfg.desync_mode == "DesyncAA" then
+        -- Анти-аим только на призраке
+        desync_cframe = CFrame.new(original_cframe.Position) * CFrame.Angles(0, math.rad(aa_yaw), 0)
+    elseif cfg.desync_mode == "Custom" then
+        -- Кастомная позиция и поворот
+        local custom = cfg.desync_settings.Custom
+        local pos = original_cframe.Position + custom.pos
+        desync_cframe = CFrame.new(pos) * CFrame.Angles(
+            math.rad(custom.angles.X),
+            math.rad(custom.yaw + custom.angles.Y),
+            math.rad(custom.angles.Z)
+        )
+    end
+
+    -- Настраиваем камеру
+    follow_part.CFrame = original_cframe + Vector3.new(0, 1.5, 0)
+    cam.CameraSubject = follow_part
+
+    -- Применяем десинхронизацию
+    if ghost_model and ghost_model.PrimaryPart then
+        ghost_model:SetPrimaryPartCFrame(desync_cframe)
+        hrp.CFrame = desync_cframe
+        rs.RenderStepped:Wait()
+        -- Возвращаем игрока в исходное положение
+        hrp.CFrame = original_cframe
+    end
+
+    -- Возвращаем камеру к персонажу
+    cam.CameraSubject = hum
+end
+
+-- Установка yaw для анти-аима
+local function set_yaw(y)
+    if not hrp then return end
+    local cf = hrp.CFrame
+    local base_yaw = cfg.modes[cfg.mode].cam and get_cam_yaw() or 0
+    local offset = cfg.modes[cfg.mode].cam and cfg.modes[cfg.mode].cam_offset or 0
+    if cfg.desync and cfg.desync_mode == "DesyncAA" then
+        -- Анти-аим только на призраке, реальный персонаж не поворачивается
+        return
+    end
+    hrp.CFrame = CFrame.new(cf.Position) * CFrame.Angles(0, math.rad(base_yaw + y + offset), 0)
+end
+
+-- Обновление анти-аима
+local accumulated_time = 0
+rs.Heartbeat:Connect(function(dt)
+    if not cfg.on or not hrp or not hum then return end
+    local m, s, t = cfg.modes[cfg.mode], cfg.modes[cfg.mode], tick()
+
+    if m == cfg.modes.Spinbot then
+        tgt_yaw = (tgt_yaw + s.speed * dt * s.dir) % 360
+    elseif m == cfg.modes.Jitter then
+        local int = 1 / s.speed
+        if t - last >= int then
+            tgt_yaw = tgt_yaw == s.angle and -s.angle or s.angle
+            last = t
+        end
+    elseif m == cfg.modes.MultiWays then
+        local int = 1 / s.speed
+        if t - last >= int then
+            local i = math.floor((t / int) % s.ways) + 1
+            tgt_yaw = s.angles[i]
+            last = t
+        end
+    elseif m == cfg.modes.Backward then
+        tgt_yaw = 0
+    elseif m == cfg.modes.Random then
+        if t - last >= s.int then
+            tgt_yaw = math.random(s.min, s.max)
+            last = t
+        end
+    elseif m == cfg.modes.Sway then
+        tgt_yaw = math.sin(t * s.speed * 2 * math.pi) * s.angle
+    elseif m == cfg.modes.Static then
+        tgt_yaw = s.angle
+    elseif m == cfg.modes.Pulse then
+        local int = 1 / s.speed
+        if t - last >= int then
+            tgt_yaw = tgt_yaw == s.a1 and s.a2 or s.a1
+            last = t
+        end
+    elseif m == cfg.modes.Flick then
+        if not flick and t - last >= s.int then
+            flick, flick_t, tgt_yaw = true, t, s.angle
+        elseif flick and t - flick_t >= s.dur then
+            flick, last, tgt_yaw = false, t, 0
+        end
+    elseif m == cfg.modes.Lisp then
+        local is_fast = math.floor(t / (s.fast_i + s.slow_i)) % 2 == 0
+        local int = is_fast and s.fast_i or s.slow_i
+        if t - last >= int then
+            tgt_yaw = is_fast and s.fast_a or s.slow_a
+            last = t
+        end
+    end
+
+    -- Плавное изменение yaw
+    yaw = lerp(yaw, tgt_yaw, s.smooth * dt * 60)
+    set_yaw(yaw)
+
+    -- Применение десинхронизации
+    if cfg.desync then
+        accumulated_time = accumulated_time + dt
+        if accumulated_time >= cfg.desync_interval then
+            apply_desync(dt)
+            accumulated_time = accumulated_time - cfg.desync_interval
+        end
+    end
+end)
+
+-- Управление
+uis.InputBegan:Connect(function(i, gp)
+    if gp then return end
+    if i.KeyCode == Enum.KeyCode.T then
+        cfg.on = not cfg.on
+        update_auto_rotate()
+        if not cfg.on and cfg.desync then
+            cfg.desync = false
+            if follow_part then follow_part:Destroy() end
+            if ghost_model then ghost_model:Destroy() end
+        end
+    elseif i.KeyCode == Enum.KeyCode.Y then
+        local modes = {"Spinbot", "Jitter", "MultiWays", "Backward", "Random", "Sway", "Static", "Pulse", "Flick", "Lisp"}
+        local idx = 1
+        for i, v in ipairs(modes) do
+            if v == cfg.mode then idx = i end
+        end
+        cfg.mode = modes[(idx % #modes) + 1]
+    elseif i.KeyCode == Enum.KeyCode.U then
+        cfg.modes[cfg.mode].cam = not cfg.modes[cfg.mode].cam
+    elseif i.KeyCode == Enum.KeyCode.R then
+        if not cfg.on then return end
+        cfg.desync = not cfg.desync
+        if cfg.desync then
+            setup_desync(chr)
+        else
+            if follow_part then follow_part:Destroy() end
+            if ghost_model then ghost_model:Destroy() end
+        end
+    elseif i.KeyCode == Enum.KeyCode.I then
+        if not cfg.desync then return end
+        local desync_modes = {"Mirror", "DesyncAA", "Custom"}
+        local idx = 1
+        for i, v in ipairs(desync_modes) do
+            if v == cfg.desync_mode then idx = i end
+        end
+        cfg.desync_mode = desync_modes[(idx % #desync_modes) + 1]
+    end
+end)
+
+-- Обновление персонажа
+lp.CharacterAdded:Connect(function(c)
+    chr = c
+    hrp = c:WaitForChild("HumanoidRootPart")
+    hum = c:WaitForChild("Humanoid")
+    update_auto_rotate()
+    if cfg.desync then
+        setup_desync(c)
+    end
+end)

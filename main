@@ -2,7 +2,7 @@ local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/zxcre
 
 -- Create the main window with specified size
 local Window = Library:Window({
-    Size = UDim2.new(0, 600, 0, 650)
+	Size = UDim2.new(0, 600, 0, 650)
 })
 
 -- Set the background color to white

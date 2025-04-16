@@ -1,0 +1,381 @@
+-- Оптимизированный скрипт для Anti-Aim и Silent Aimbot с поддержкой UI
+
+-- НАСТРОЙКИ (легко доступны для UI)
+local cfg = {
+    -- Общие настройки
+    enabled = false, -- Включение/выключение скрипта
+    keybinds = {
+        toggle = Enum.KeyCode.T, -- Переключение Anti-Aim
+        cycle_mode = Enum.KeyCode.Y, -- Смена режима Anti-Aim
+        toggle_cam = Enum.KeyCode.U, -- Включение/выключение камеры
+        toggle_desync = Enum.KeyCode.R, -- Включение/выключение десинхронизации
+        cycle_desync_mode = Enum.KeyCode.I, -- Смена режима десинхронизации
+        aimbot_toggle = Enum.KeyCode.C -- Переключение Silent Aimbot
+    },
+    
+    -- Настройки Anti-Aim
+    aa = {
+        mode = "Spinbot", -- Текущий режим: Spinbot, Jitter, MultiWays, Backward, Random, Sway, Static, Pulse, Flick, Lisp
+        desync = {
+            enabled = false,
+            mode = "DesyncAA", -- Mirror, DesyncAA, Custom
+            interval = 0.0001, -- Частота десинхронизации (сек)
+            settings = {
+                Mirror = {},
+                DesyncAA = {},
+                Custom = {
+                    pos = Vector3.new(5, 0, 5),
+                    yaw = 90,
+                    angles = Vector3.new(0, 0, 0)
+                }
+            }
+        },
+        ghost = {
+            torso_size = Vector3.new(2, 2, 1),
+            head_size = Vector3.new(1, 1, 1),
+            limb_size = Vector3.new(1, 2, 1),
+            transparency = 0,
+            part_color = BrickColor.new("Light blue"),
+            material = Enum.Material.ForceField,
+            highlight = {
+                fill_color = Color3.fromRGB(0, 170, 255),
+                fill_color_active = Color3.fromRGB(0, 255, 0),
+                outline_color = Color3.fromRGB(0, 255, 255),
+                fill_transparency = 0.5,
+                outline_transparency = 0
+            }
+        },
+        modes = {
+            Spinbot = { speed = 360, smooth = 0.5, cam = false, cam_offset = 0, dir = 1 },
+            Jitter = { angle = 45, speed = 10, smooth = 0.3, cam = true, cam_offset = 0 },
+            MultiWays = { ways = 5, angles = {0, 72, 144, 216, 288}, speed = 5, smooth = 0.4, cam = false, cam_offset = 0 },
+            Backward = { smooth = 0.2, cam = true, cam_offset = 180 },
+            Random = { min = -180, max = 180, int = 0.2, smooth = 0.3, cam = false, cam_offset = 0 },
+            Sway = { angle = 30, speed = 2, smooth = 0.6, cam = true, cam_offset = 0 },
+            Static = { angle = 0, smooth = 0.1, cam = false, cam_offset = 0 },
+            Pulse = { a1 = 30, a2 = -30, speed = 4, smooth = 0.4, cam = true, cam_offset = 0 },
+            Flick = { angle = 90, int = 0.5, dur = 0.1, smooth = 0.2, cam = false, cam_offset = 0 },
+            Lisp = { fast_a = 45, slow_a = 15, fast_i = 0.1, slow_i = 0.3, smooth = 0.3, cam = true, cam_offset = 0 }
+        }
+    },
+    
+    -- Настройки Silent Aimbot
+    aimbot = {
+        prediction = 0.141245121,
+        prediction_mode = "MoveDirection", -- Velocity, MoveDirection, CalculateCFrame
+        jump_offset = 0.07,
+        fall_offset = 0.07,
+        tracer = {
+            enabled = true,
+            color = Color3.fromRGB(255, 50, 50),
+            thickness = 1.5,
+            transparency = 0.7,
+            origin_part = "Head" -- Часть тела, из которой выходит трейсер: Head, Torso, LeftArm, RightArm
+        }
+    }
+}
+
+-- СЕРВИСЫ
+local rs = game:GetService("RunService")
+local uis = game:GetService("UserInputService")
+local plrs = game:GetService("Players")
+local rep = game:GetService("ReplicatedStorage")
+local cam = workspace.CurrentCamera
+local draw = Drawing
+
+-- ЛОКАЛЬНЫЕ ПЕРЕМЕННЫЕ
+local lp = plrs.LocalPlayer
+local chr = lp.Character or lp.CharacterAdded:Wait()
+local hrp, hum = chr:WaitForChild("HumanoidRootPart"), chr:WaitForChild("Humanoid")
+local mouse = lp:GetMouse()
+local yaw, tgt_yaw, last, flick, flick_t = 0, 0, 0, false, 0
+local follow_part, ghost_model, tracer_line = nil, nil, nil
+local target, last_pos, last_time = nil, nil, nil
+local acc_time = 0
+
+-- ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
+local function lerp(a, b, t) return a + (b - a) * math.min(t, 1) end
+local function get_cam_yaw()
+    local lv = cam.CFrame.LookVector
+    return math.deg(math.atan2(-lv.X, -lv.Z))
+end
+local function update_auto_rotate() hum.AutoRotate = not cfg.enabled end
+
+-- СОЗДАНИЕ ЭЛЕМЕНТОВ
+local function create_follow_part()
+    local p = Instance.new("Part")
+    p.Name, p.Anchored, p.CanCollide, p.Transparency, p.Size, p.Parent = 
+        "FollowPart", true, false, 1, Vector3.new(0.1, 0.1, 0.1), workspace
+    return p
+end
+
+local function create_ghost()
+    local m = Instance.new("Model")
+    m.Name, m.Parent = "GhostModel", workspace
+    local g = cfg.aa.ghost
+    local parts = {
+        {name = "Torso", size = g.torso_size, offset = Vector3.new(0, 0, 0)},
+        {name = "Head", size = g.head_size, offset = Vector3.new(0, 1.5, 0)},
+        {name = "LeftArm", size = g.limb_size, offset = Vector3.new(-1.5, 0, 0)},
+        {name = "RightArm", size = g.limb_size, offset = Vector3.new(1.5, 0, 0)},
+        {name = "LeftLeg", size = g.limb_size, offset = Vector3.new(-0.5, -2, 0)},
+        {name = "RightLeg", size = g.limb_size, offset = Vector3.new(0.5, -2, 0)}
+    }
+    local torso
+    for _, p in ipairs(parts) do
+        local part = Instance.new("Part")
+        part.Name, part.Size, part.Anchored, part.CanCollide, part.Transparency, part.BrickColor, part.Material, part.Parent =
+            p.name, p.size, true, false, g.transparency, g.part_color, g.material, m
+        if p.name == "Tiguo" then
+            torso = part
+            m.PrimaryPart = torso
+        else
+            part.Position = torso.Position + p.offset
+        end
+    end
+    local h = Instance.new("Highlight")
+    h.Name, h.FillTransparency, h.OutlineTransparency, h.FillColor, h.OutlineColor, h.Parent =
+        "GhostHighlight", g.highlight.fill_transparency, g.highlight.outline_transparency,
+        cfg.aa.desync.enabled and g.highlight.fill_color_active or g.highlight.fill_color,
+        g.highlight.outline_color, m
+    return m
+end
+
+local function create_tracer()
+    if tracer_line then tracer_line:Remove() end
+    tracer_line = draw.new("Line")
+    tracer_line.Color, tracer_line.Thickness, tracer_line.Transparency, tracer_line.Visible =
+        cfg.aimbot.tracer.color, cfg.aimbot.tracer.thickness, cfg.aimbot.tracer.transparency, false
+end
+
+-- УПРАВЛЕНИЕ ДЕСИНХРОНИЗАЦИЕЙ
+local function setup_desync(c)
+    if follow_part then follow_part:Destroy() end
+    if ghost_model then ghost_model:Destroy() end
+    follow_part, ghost_model = create_follow_part(), create_ghost()
+    local h = ghost_model and ghost_model:FindFirstChild("GhostHighlight")
+    if h then
+        h.FillColor = cfg.aa.desync.enabled and cfg.aa.ghost.highlight.fill_color_active or cfg.aa.ghost.highlight.fill_color
+    end
+end
+
+local function apply_desync(dt)
+    if not (chr and hrp and hum and cam and follow_part and ghost_model) or hrp.Velocity.Magnitude <= 0 then return end
+    local ocf = hrp.CFrame
+    local base_yaw = cfg.aa.modes[cfg.aa.mode].cam and get_cam_yaw() or 0
+    local offset = cfg.aa.modes[cfg.aa.mode].cam_offset or 0
+    local aa_yaw = base_yaw + yaw + offset
+    local dcf
+    if cfg.aa.desync.mode == "Mirror" then
+        dcf = CFrame.new(ocf.Position) * CFrame.Angles(0, math.rad(aa_yaw - 180), 0)
+    elseif cfg.aa.desync.mode == "DesyncAA" then
+        dcf = CFrame.new(ocf.Position) * CFrame.Angles(0, math.rad(aa_yaw), 0)
+    elseif cfg.aa.desync.mode == "Custom" then
+        local c = cfg.aa.desync.settings.Custom
+        dcf = CFrame.new(ocf.Position + c.pos) * CFrame.A // CFrame.Angles(math.rad(c.angles.X), math.rad(c.yaw + c.angles.Y), math.rad(c.angles.Z))
+    end
+    follow_part.CFrame = ocf + Vector3.new(0, 1.5, 0)
+    cam.CameraSubject = follow_part
+    if ghost_model and ghost_model.PrimaryPart then
+        ghost_model:SetPrimaryPartCFrame(dcf)
+        hrp.CFrame = dcf
+        rs.RenderStepped:Wait()
+        hrp.CFrame = ocf
+    end
+    cam.CameraSubject = hum
+end
+
+-- УПРАВЛЕНИЕ ANTI-AIM
+local function set_yaw(y)
+    if not hrp then return end
+    local cf = hrp.CFrame
+    local base_yaw = cfg.aa.modes[cfg.aa.mode].cam and get_cam_yaw() or 0
+    local offset = cfg.aa.modes[cfg.aa.mode].cam_offset or 0
+    if cfg.aa.desync.enabled and cfg.aa.desync.mode == "DesyncAA" then return end
+    hrp.CFrame = CFrame.new(cf.Position) * CFrame.Angles(0, math.rad(base_yaw + y + offset), 0)
+end
+
+-- SILENT AIMBOT
+local function predict_pos(t_root, t_hum)
+    if not (t_root and t_hum) then return t_root and t_root.Position or Vector3.new() end
+    local pos, vel = t_root.Position, t_root.Velocity
+    local vo = vel.Y > 0 and vel.Y * cfg.aimbot.jump_offset or (vel.Y < 0 and vel.Y * cfg.aimbot.fall_offset) or 0
+    if cfg.aimbot.prediction_mode == "Velocity" then
+        return pos + (vel * cfg.aimbot.prediction) + Vector3.new(0, vo, 0)
+    elseif cfg.aimbot.prediction_mode == "MoveDirection" then
+        local md = t_hum.MoveDirection
+        return md ~= Vector3.new() and pos + (md.Unit * (cfg.aimbot.prediction * 10)) + Vector3.new(0, vo, 0) or pos + Vector3.new(0, vo, 0)
+    elseif cfg.aimbot.prediction_mode == "CalculateCFrame" then
+        local ct = tick()
+        local dt = ct - (last_time or ct)
+        if not last_pos or (pos - last_pos).Magnitude < 0.001 then
+            last_pos, last_time = pos, ct
+            return pos + Vector3.new(0, vo, 0)
+        end
+        local dist = (pos - last_pos).Magnitude
+        local spd = (dist / dt) * (0.1 * (cfg.aimbot.prediction * 10))
+        local pp = pos + (pos - last_pos).Unit * spd
+        local vs = (pos.Y - last_pos.Y) / dt * (0.1 * cfg.aimbot.prediction)
+        last_pos, last_time = pos, ct
+        return pp + Vector3.new(0, vs + vo, 0)
+    end
+    return pos + Vector3.new(0, vo, 0)
+end
+
+local function get_closest()
+    local ct, cd = nil, math.huge
+    for _, p in ipairs(plrs:GetPlayers()) do
+        if p ~= lp and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+            local pos, os = cam:WorldToScreenPoint(p.Character.HumanoidRootPart.Position)
+            local d = (Vector2.new(pos.X, pos.Y) - Vector2.new(mouse.X, mouse.Y)).Magnitude
+            if d < cd and os then ct, cd = p, d end
+        end
+    end
+    return ct
+end
+
+local function update_tracer()
+    if not (tracer_line and target and chr) then return end
+    local op = chr:FindFirstChild(cfg.aimbot.tracer.origin_part)
+    local tr = target.Character and target.Character:FindFirstChild("HumanoidRootPart")
+    local th = target.Character and target.Character:FindFirstChild("Humanoid")
+    if op and tr and th then
+        local pp = predict_pos(tr, th)
+        local osp, ov = cam:WorldToViewportPoint(op.Position)
+        local psp, pv = cam:WorldToViewportPoint(pp)
+        if ov and pv then
+            tracer_line.From, tracer_line.To, tracer_line.Visible = Vector2.new(osp.X, osp.Y), Vector2.new(psp.X, psp.Y), true
+        else
+            tracer_line.Visible = false
+        end
+    else
+        tracer_line.Visible = false
+    end
+end
+
+-- ОСНОВНОЙ ЦИКЛ
+rs.Heartbeat:Connect(function(dt)
+    if not (cfg.enabled and hrp and hum) then return end
+    local m = cfg.aa.modes[cfg.aa.mode]
+    local t = tick()
+    if m == cfg.aa.modes.Spinbot then
+        tgt_yaw = (tgt_yaw + m.speed * dt * m.dir) % 360
+    elseif m == cfg.aa.modes.Jitter then
+        if t - last >= 1 / m.speed then
+            tgt_yaw, last = tgt_yaw == m.angle and -m.angle or m.angle, t
+        end
+    elseif m == cfg.aa.modes.MultiWays then
+        if t - last >= 1 / m.speed then
+            local i = math.floor((t / (1 / m.speed)) % m.ways) + 1
+            tgt_yaw, last = m.angles[i], t
+        end
+    elseif m == cfg.aa.modes.Backward then
+        tgt_yaw = 0
+    elseif m == cfg.aa.modes.Random then
+        if t - last >= m.int then
+            tgt_yaw, last = math.random(m.min, m.max), t
+        end
+    elseif m == cfg.aa.modes.Sway then
+        tgt_yaw = math.sin(t * m.speed * 2 * math.pi) * m.angle
+    elseif m == cfg.aa.modes.Static then
+        tgt_yaw = m.angle
+    elseif m == cfg.aa.modes.Pulse then
+        if t - last >= 1 / m.speed then
+            tgt_yaw, last = tgt_yaw == m.a1 and m.a2 or m.a1, t
+        end
+    elseif m == cfg.aa.modes.Flick then
+        if not flick and t - last >= m.int then
+            flick, flick_t, tgt_yaw = true, t, m.angle
+        elseif flick and t - flick_t >= m.dur then
+            flick, last, tgt_yaw = false, t, 0
+        end
+    elseif m == cfg.aa.modes.Lisp then
+        local is_fast = math.floor(t / (m.fast_i + m.slow_i)) % 2 == 0
+        local int = is_fast and m.fast_i or m.slow_i
+        if t - last >= int then
+            tgt_yaw, last = is_fast and m.fast_a or m.slow_a, t
+        end
+    end
+    yaw = lerp(yaw, tgt_yaw, m.smooth * dt * 60)
+    set_yaw(yaw)
+    if cfg.aa.desync.enabled then
+        acc_time = acc_time + dt
+        if acc_time >= cfg.aa.desync.interval then
+            apply_desync(dt)
+            acc_time = acc_time - cfg.aa.desync.interval
+        end
+    end
+end)
+
+rs.RenderStepped:Connect(update_tracer)
+
+-- УПРАВЛЕНИЕ ВВОДОМ
+uis.InputBegan:Connect(function(i, gp)
+    if gp then return end
+    local k = cfg.keybinds
+    if i.KeyCode == k.toggle then
+        cfg.enabled = not cfg.enabled
+        update_auto_rotate()
+        if not cfg.enabled and cfg.aa.desync.enabled then
+            cfg.aa.desync.enabled = false
+            if follow_part then follow_part:Destroy() end
+            if ghost_model then ghost_model:Destroy() end
+        end
+    elseif i.KeyCode == k.cycle_mode then
+        local modes = {"Spinbot", "Jitter", "MultiWays", "Backward", "Random", "Sway", "Static", "Pulse", "Flick", "Lisp"}
+        local idx = table.find(modes, cfg.aa.mode) or 1
+        cfg.aa.mode = modes[(idx % #modes) + 1]
+    elseif i.KeyCode == k.toggle_cam then
+        cfg.aa.modes[cfg.aa.mode].cam = not cfg.aa.modes[cfg.aa.mode].cam
+    elseif i.KeyCode == k.toggle_desync then
+        if not cfg.enabled then return end
+        cfg.aa.desync.enabled = not cfg.aa.desync.enabled
+        if cfg.aa.desync.enabled then
+            setup_desync(chr)
+        else
+            if follow_part then follow_part:Destroy() end
+            if ghost_model then ghost_model:Destroy() end
+        end
+    elseif i.KeyCode == k.cycle_desync_mode then
+        if not cfg.aa.desync.enabled then return end
+        local d_modes = {"Mirror", "DesyncAA", "Custom"}
+        local idx = table.find(d_modes, cfg.aa.desync.mode) or 1
+        cfg.aa.desync.mode = d_modes[(idx % #d_modes) + 1]
+    elseif i.KeyCode == k.aimbot_toggle then
+        if not target then
+            target = get_closest()
+            if target then
+                warn("Locked on: " .. target.Name)
+                create_tracer()
+            else
+                warn("No target found")
+            end
+        else
+            warn("Unlocked from: " .. target.Name)
+            target, last_pos, last_time = nil, nil, nil
+            if tracer_line then tracer_line.Visible = false end
+        end
+    end
+end)
+
+-- ОБРАБОТКА ПЕРСОНАЖА
+local function setup_char(c)
+    chr, hrp, hum = c, c:WaitForChild("HumanoidRootPart"), c:WaitForChild("Humanoid")
+    update_auto_rotate()
+    if cfg.aa.desync.enabled then setup_desync(c) end
+    c.ChildAdded:Connect(function(t)
+        if t:IsA("Tool") then
+            t.Activated:Connect(function()
+                if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") and target.Character:FindFirstChild("Humanoid") then
+                    local tr, th = target.Character.HumanoidRootPart, target.Character.Humanoid
+                    rep.MainEvent:FireServer("UpdateMousePos", predict_pos(tr, th))
+                end
+            end)
+        end
+    end)
+end
+
+-- ИНИЦИАЛИЗАЦИЯ
+create_tracer()
+if chr then setup_char(chr) end
+lp.CharacterAdded:Connect(setup_char)

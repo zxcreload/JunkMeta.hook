@@ -1,1 +1,31 @@
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/nosexclub/morbidstuffdw/refs/heads/main/lunarlib_solarafix.lua"))()
 
+-- Create the main window with specified size
+local Window = Library:Window({
+    Size = UDim2.new(0, 600, 0, 650)
+})
+
+-- Set the background color to white
+Library.Holder.BackgroundColor3 = Color3.new(1, 1, 1)
+Library:ChangeAccent(Color3.new(1, 1, 1))
+
+-- Create the five tabs
+Window:Page({
+    Name = "Combat"
+})
+
+Window:Page({
+    Name = "Visual"
+})
+
+Window:Page({
+    Name = "Movement"
+})
+
+Window:Page({
+    Name = "Misc"
+})
+
+Window:Page({
+    Name = "Other"
+})

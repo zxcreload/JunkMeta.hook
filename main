@@ -1,4 +1,4 @@
-local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/nosexclub/morbidstuffdw/refs/heads/main/lunarlib_solarafix.lua"))()
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/zxcreload/JunkMeta.hook/refs/heads/main/ui%20lib"))()
 
 -- Create the main window with specified size
 local Window = Library:Window({

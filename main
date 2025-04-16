@@ -10,22 +10,256 @@ Library.Holder.BackgroundColor3 = Color3.new(1, 1, 1)
 Library:ChangeAccent(Color3.new(1, 1, 1))
 
 -- Create the five tabs
-Window:Page({
-    Name = "Combat"
+local CombatPage = Window:Page({ Name = "Combat" })
+Window:Page({ Name = "Visual" })
+Window:Page({ Name = "Movement" })
+Window:Page({ Name = "Misc" })
+Window:Page({ Name = "Other" })
+
+-- Create a section on the left in the Combat tab
+local CombatSection = CombatPage:Section({
+    Name = "Silent Aimbot",
+    Side = "Left"
 })
 
-Window:Page({
-    Name = "Visual"
-})
+-- Optimized Silent Aimbot Code
+local function SetupSilentAimbot()
+    -- SETTINGS
+    local keybind = Enum.KeyCode.C
+    local jumpOffset = 0.07
+    local fallOffset = 0.07
+    local prediction = 0.141245121
+    local predictionMode = "MoveDirection"
+    local tracerColor = Color3.fromRGB(255, 50, 50)
+    local tracerThickness = 1.5
+    local tracerTransparency = 0.7
+	local initialOpacity = math.floor(100 * (1 - tracerTransparency))
+    local aimbotEnabled = false
+    local visualizerEnabled = false
 
-Window:Page({
-    Name = "Movement"
-})
+    -- SERVICES
+    local uis, plrs, rs, run = game:GetService("UserInputService"), game:GetService("Players"), game:GetService("ReplicatedStorage"), game:GetService("RunService")
+    local lp, cam, mouse = plrs.LocalPlayer, workspace.CurrentCamera, plrs.LocalPlayer:GetMouse()
+    local char, target, tracer, lastPos, lastTime = lp.Character, nil, nil, nil, nil
 
-Window:Page({
-    Name = "Misc"
-})
+    -- Create Tracer
+    local function createTracer()
+        if tracer then tracer:Remove() end
+        tracer = Drawing.new("Line")
+        tracer.Color, tracer.Thickness, tracer.Transparency, tracer.Visible = tracerColor, tracerThickness, tracerTransparency, false
+    end
 
-Window:Page({
-    Name = "Other"
-})
+    -- Predict Position
+    local function predictPos(tRoot, hum)
+        if not tRoot or not hum then return tRoot and tRoot.Position or Vector3.new() end
+        local pos, vel = tRoot.Position, tRoot.Velocity
+        local vOffset = vel.Y > 0 and vel.Y * jumpOffset or vel.Y < 0 and vel.Y * fallOffset or 0
+
+        if predictionMode == "Velocity" then
+            return pos + (vel * prediction) + Vector3.new(0, vOffset, 0)
+        elseif predictionMode == "MoveDirection" then
+            local md = hum.MoveDirection
+            return md ~= Vector3.new() and pos + (md.Unit * (prediction * 10)) + Vector3.new(0, vOffset, 0) or pos + Vector3.new(0, vOffset, 0)
+        elseif predictionMode == "CalculateCFrame" then
+            local currTime, dt = tick(), lastTime and (tick() - lastTime) or 0
+            if not lastPos or (pos - lastPos).Magnitude < 0.001 then
+                lastPos, lastTime = pos, currTime
+                return pos + Vector3.new(0, vOffset, 0)
+            end
+            local dist, speed = (pos - lastPos).Magnitude, (dist / dt) * (0.1 * (prediction * 10))
+            local predPos = pos + (pos - lastPos).Unit * speed
+            local vSpeed = (pos.Y - lastPos.Y) / dt * (0.1 * prediction)
+            lastPos, lastTime = pos, currTime
+            return predPos + Vector3.new(0, vSpeed + vOffset, 0)
+        end
+        return pos + Vector3.new(0, vOffset, 0)
+    end
+
+    -- Update Tracer
+    local function updateTracer()
+        if not aimbotEnabled or not visualizerEnabled or not tracer or not target or not char then return end
+        local head, tRoot, tHum = char:FindFirstChild("Head"), target.Character and target.Character:FindFirstChild("HumanoidRootPart"), target.Character and target.Character:FindFirstChild("Humanoid")
+        if head and tRoot and tHum then
+            local predPos = predictPos(tRoot, tHum)
+            local hScreen, hVis = cam:WorldToViewportPoint(head.Position)
+            local pScreen, pVis = cam:WorldToViewportPoint(predPos)
+            if hVis and pVis then
+                tracer.From, tracer.To, tracer.Visible = Vector2.new(hScreen.X, hScreen.Y), Vector2.new(pScreen.X, pScreen.Y), true
+            else
+                tracer.Visible = false
+            end
+        else
+            tracer.Visible = false
+        end
+    end
+
+    -- Get Closest Player to Mouse
+    local function getClosest()
+        local closest, dist = nil, math.huge
+        for _, p in pairs(plrs:GetPlayers()) do
+            if p ~= lp and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                local pos, onScreen = cam:WorldToScreenPoint(p.Character.HumanoidRootPart.Position)
+                local d = (Vector2.new(pos.X, pos.Y) - Vector2.new(mouse.X, mouse.Y)).Magnitude
+                if d < dist and onScreen then
+                    dist, closest = d, p
+                end
+            end
+        end
+        return closest
+    end
+
+    -- Handle Input
+    local function handleInput(input, gpe)
+        if gpe or not aimbotEnabled then return end
+        if input.KeyCode == keybind then
+            if not target then
+                target = getClosest()
+                if target then
+                    warn("Locked on to: " .. target.Name)
+                    createTracer()
+                else
+                    warn("No target found")
+                end
+            else
+                warn("Unlocked from: " .. target.Name)
+                target, lastPos, lastTime = nil, nil, nil
+                if tracer then tracer.Visible = false end
+            end
+        end
+    end
+
+    -- Setup Character
+    local function setupChar(c)
+        char = c
+        c.ChildAdded:Connect(function(tool)
+            if tool:IsA("Tool") then
+                tool.Activated:Connect(function()
+                    if aimbotEnabled and target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") and target.Character:FindFirstChild("Humanoid") then
+                        local tRoot, tHum = target.Character.HumanoidRootPart, target.Character.Humanoid
+                        rs.MainEvent:FireServer("UpdateMousePos", predictPos(tRoot, tHum))
+                    end
+                end)
+            end
+        end)
+    end
+
+    -- UI Elements
+    CombatSection:Toggle({
+        Name = "Silent Aim",
+        State = false,
+        Callback = function(state)
+            aimbotEnabled = state
+            if not state and tracer then tracer.Visible = false end
+        end,
+        Flag = "SilentAimToggle"
+    })
+
+    CombatSection:Keybind({
+        Name = "Aimbot Keybind",
+        State = Enum.KeyCode.C,
+        Mode = "Toggle",
+        Callback = function() end, -- Keybind handled in handleInput
+        Flag = "AimbotKeybind",
+        UseKey = true
+    }).Set = function(newKey)
+        keybind = newKey
+    end
+
+    CombatSection:Dropdown({
+        Name = "Prediction Mode",
+        Options = {"Velocity", "MoveDirection", "CalculateCFrame"},
+        State = "MoveDirection",
+        Callback = function(option) predictionMode = option end,
+        Flag = "PredictionMode"
+    })
+
+    CombatSection:Textbox({
+        Name = "Prediction",
+        Placeholder = "0.141245121",
+        State = tostring(prediction),
+        Callback = function(text) prediction = tonumber(text) or prediction end,
+        Flag = "PredictionValue"
+    })
+
+    CombatSection:Textbox({
+        Name = "Y Offset (Jump)",
+        Placeholder = "0.07",
+        State = tostring(jumpOffset),
+        Callback = function(text) jumpOffset = tonumber(text) or jumpOffset end,
+        Flag = "JumpOffset"
+    })
+
+    CombatSection:Textbox({
+        Name = "Y Offset (Fall)",
+        Placeholder = "0.07",
+        State = tostring(fallOffset),
+        Callback = function(text) fallOffset = tonumber(text) or fallOffset end,
+        Flag = "FallOffset"
+    })
+
+    CombatSection:Toggle({
+        Name = "Aim Visualizer",
+        State = false,
+        Callback = function(state)
+            visualizerEnabled = state
+            if not state and tracer then tracer.Visible = false end
+        end,
+        Flag = "AimVisualizer"
+    })
+
+	-- Изначальная настройка цвета трейсера
+local tracerColor = Color3.fromRGB(255, 50, 50)
+
+	-- Добавление Colorpicker в секцию CombatSection
+		CombatSection:Colorpicker({
+    	Name = "Visualizer Color",
+   		State = tracerColor,
+    	Callback = function(color)
+        	tracerColor = color
+        	if tracer then tracer.Color = color end
+    	end,
+    	Flag = "VisualizerColor"
+	})
+
+    -- Настройка слайдера в UI
+	CombatSection:Slider({
+    Name = "Visualizer Opacity",
+    Min = 1,
+    Max = 100,
+    Decimals = 1,
+    State = initialOpacity,
+    Text = "Opacity: [value]%",
+    Callback = function(value)
+        local transparency = 1 - (value / 100)
+        tracerTransparency = transparency
+        if tracer then tracer.Transparency = transparency end
+    end,
+    Flag = "VisualizerOpacity"
+	})
+
+    CombatSection:Slider({
+        Name = "Visualizer Thickness",
+        Min = 1,
+        Max = 5,
+        Decimals = 1,
+        State = tracerThickness,
+        Text = "Thickness: [value]",
+        Callback = function(value)
+            tracerThickness = value
+            if tracer then tracer.Thickness = value end
+        end,
+        Flag = "VisualizerThickness"
+    })
+
+	
+
+    -- Initialize
+    createTracer()
+    if char then setupChar(char) end
+    lp.CharacterAdded:Connect(setupChar)
+    uis.InputBegan:Connect(handleInput)
+    run.RenderStepped:Connect(updateTracer)
+end
+
+-- Run the aimbot setup
+SetupSilentAimbot()

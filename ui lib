@@ -50,7 +50,7 @@ local function Dragify(frame, parent)
     input.InputChanged:Connect(function(input)
         if input == dragInput and dragging then
             local delta = input.Position - mousePos
-            parent.Position  = UDim2.new(framePos.X.Scale, framePos.X.Offset + delta.X, framePos.Y.Scale, framePos.Y.Offset + delta.Y)
+            parent.Position = UDim2.new(framePos.X.Scale, framePos.X.Offset + delta.X, framePos.Y.Scale, framePos.Y.Offset + delta.Y)
         end
     end)
 end
@@ -101,7 +101,6 @@ end
 
 function Library:Window(options)
     options.text = options.text or "NEVERLOSE"
-    options.Size = options.Size or UDim2.new(0, 658, 0, 516)
 
     local SG = Instance.new("ScreenGui")
     local Body = Instance.new("Frame")
@@ -126,9 +125,10 @@ function Library:Window(options)
     Body.Parent = SG
     Body.AnchorPoint = Vector2.new(0.5, 0.5)
     Body.BackgroundColor3 = Color3.fromRGB(9, 8, 13)
+    Body.BackgroundTransparency = 1 -- Полностью прозрачный фон для контейнера
     Body.BorderSizePixel = 0
     Body.Position = UDim2.new(0.465730786, 0, 0.5, 0)
-    Body.Size = options.Size
+    Body.Size = UDim2.new(0, 658, 0, 516)
 
     bodyCorner.CornerRadius = UDim.new(0, 4)
     bodyCorner.Name = "bodyCorner"
@@ -136,9 +136,10 @@ function Library:Window(options)
 
     SideBar.Name = "SideBar"
     SideBar.Parent = Body
-    SideBar.BackgroundColor3 = Color3.fromRGB(26, 36, 48)
+    SideBar.BackgroundColor3 = Color3.fromRGB(0, 15, 30) -- Цвет такой же, как у правой части
+    SideBar.BackgroundTransparency = 0.7 -- Большая прозрачность для левой части
     SideBar.BorderSizePixel = 0
-    SideBar.Size = UDim2.new(0, 187, 0, options.Size.Y.Offset)
+    SideBar.Size = UDim2.new(0, 187, 0, 516)
 
     sidebarCorner.CornerRadius = UDim.new(0, 4)
     sidebarCorner.Name = "sidebarCorner"
@@ -146,26 +147,28 @@ function Library:Window(options)
 
     sbLine.Name = "sbLine"
     sbLine.Parent = SideBar
-    sbLine.BackgroundColor3 = Color3.fromRGB(15, 23, 36)
+    sbLine.BackgroundColor3 = Color3.fromRGB(13, 28, 44)
+    sbLine.BackgroundTransparency = 0.7 -- Такая же прозрачность, как у SideBar
     sbLine.BorderSizePixel = 0
     sbLine.Position = UDim2.new(0.99490571, 0, 0, 0)
-    sbLine.Size = UDim2.new(0, 3, 0, options.Size.Y.Offset)
+    sbLine.Size = UDim2.new(0, 3, 0, 516)
 
     TopBar.Name = "TopBar"
     TopBar.Parent = Body
-    TopBar.BackgroundColor3 = Color3.fromRGB(9, 8, 13)
-    TopBar.BackgroundTransparency = 1.000
+    TopBar.BackgroundColor3 = Color3.fromRGB(0, 15, 30)
+    TopBar.BackgroundTransparency = 1 -- Прозрачный, чтобы не мешать
     TopBar.BorderColor3 = Color3.fromRGB(14, 21, 32)
     TopBar.BorderSizePixel = 0
     TopBar.Position = UDim2.new(0.25166446, 0, 0, 0)
-    TopBar.Size = UDim2.new(0, options.Size.X.Offset - 96, 0, 49)
+    TopBar.Size = UDim2.new(0, 562, 0, 49)
 
     tbLine.Name = "tbLine"
     tbLine.Parent = TopBar
-    tbLine.BackgroundColor3 = Color3.fromRGB(15, 23, 36)
+    tbLine.BackgroundColor3 = Color3.fromRGB(13, 28, 44)
+    tbLine.BackgroundTransparency = 0.5 -- Прозрачность линии соответствует правой части
     tbLine.BorderSizePixel = 0
     tbLine.Position = UDim2.new(0.0400355868, 0, 1, 0)
-    tbLine.Size = UDim2.new(0, options.Size.X.Offset - 189, 0, 3)
+    tbLine.Size = UDim2.new(0, 469, 0, 3)
 
     Title.Name = "Title"
     Title.Parent = SideBar
@@ -182,24 +185,24 @@ function Library:Window(options)
 
     allPages.Name = "allPages"
     allPages.Parent = Body
-    allPages.BackgroundColor3 = Color3.fromRGB(234, 239, 245)
-    allPages.BackgroundTransparency = 1.000
+    allPages.BackgroundColor3 = Color3.fromRGB(0, 15, 30) -- Тот же цвет, что у SideBar
+    allPages.BackgroundTransparency = 0.5 -- Меньшая прозрачность для правой части
     allPages.BorderSizePixel = 0
     allPages.Position = UDim2.new(0.29508087, 0, 0.100775197, 0)
-    allPages.Size = UDim2.new(0, options.Size.X.Offset - 195, 0, options.Size.Y.Offset - 52)
+    allPages.Size = UDim2.new(0, 463, 0, 464)
 
     tabContainer.Name = "tabContainer"
     tabContainer.Parent = SideBar
     tabContainer.BackgroundColor3 = Color3.fromRGB(234, 239, 245)
-    tabContainer.BackgroundTransparency = 1.000
+    tabContainer.BackgroundTransparency = 1.000 -- Прозрачный, чтобы не перекрывать SideBar
     tabContainer.BorderSizePixel = 0
     tabContainer.Position = UDim2.new(0, 0, 0.100775197, 0)
-    tabContainer.Size = UDim2.new(0, 187, 0, options.Size.Y.Offset - 52)
+    tabContainer.Size = UDim2.new(0, 187, 0, 464)
 
     local tabsections = {}
 
-    function tabsections:TabSection(optionsTabSection)
-        optionsTabSection.text = optionsTabSection.text or "Tab Section"
+    function tabsections:TabSection(options)
+        options.text = options.text or "Tab Section"
 
         local tabLayout = Instance.new("UIListLayout")
         local tabSection = Instance.new("Frame")
@@ -217,7 +220,7 @@ function Library:Window(options)
         tabSection.Size = UDim2.new(0, 189, 0, 22)
 
         local function ResizeTS(num)
-            tabSection.Size += UDim2.new(0, 0, 0, num)
+            tabSection.Size = UDim2.new(0, 189, 0, tabSection.Size.Y.Offset + num)
         end
 
         tabSectionLabel.Name = "tabSectionLabel"
@@ -227,7 +230,7 @@ function Library:Window(options)
         tabSectionLabel.BorderSizePixel = 0
         tabSectionLabel.Size = UDim2.new(0, 190, 0, 22)
         tabSectionLabel.Font = Enum.Font.Gotham
-        tabSectionLabel.Text = "     ".. optionsTabSection.text
+        tabSectionLabel.Text = "     ".. options.text
         tabSectionLabel.TextColor3 = Color3.fromRGB(79, 107, 126)
         tabSectionLabel.TextSize = 17.000
         tabSectionLabel.TextXAlignment = Enum.TextXAlignment.Left
@@ -240,9 +243,9 @@ function Library:Window(options)
 
         local tabs = {}
 
-        function tabs:Tab(optionsTab)
-            optionsTab.text = optionsTab.text or "New Tab"
-            optionsTab.icon = optionsTab.icon or "rbxassetid://7999345313"
+        function tabs:Tab(options)
+            options.text = options.text or "New Tab"
+            options.icon = options.icon or "rbxassetid://7999345313"
 
             local tabButton = Instance.new("TextButton")
             local tabButtonCorner = Instance.new("UICorner")
@@ -253,16 +256,16 @@ function Library:Window(options)
 
             tabButton.Name = "tabButton"
             tabButton.Parent = tabSection
-            tabButton.BackgroundColor3 = Color3.fromRGB(13, 57, 84)
+            tabButton.BackgroundColor3 = Color3.fromRGB(0, 15, 30) -- Тот же цвет, что у SideBar
+            tabButton.BackgroundTransparency = 0.7 -- Такая же прозрачность, как у SideBar
             tabButton.BorderSizePixel = 0
             tabButton.Position = UDim2.new(0.0714285746, 0, 0.402777791, 0)
             tabButton.Size = UDim2.new(0, 165, 0, 30)
             tabButton.AutoButtonColor = false
             tabButton.Font = Enum.Font.GothamSemibold
-            tabButton.Text = "         " .. optionsTab.text
+            tabButton.Text = "         " .. options.text
             tabButton.TextColor3 = Color3.fromRGB(234, 239, 245)
             tabButton.TextSize = 14.000
-            tabButton.BackgroundTransparency = 1
             tabButton.TextXAlignment = Enum.TextXAlignment.Left
             tabButton.MouseButton1Click:Connect(function()
                 for i,v in next, allPages:GetChildren() do
@@ -274,13 +277,13 @@ function Library:Window(options)
                 for i,v in next, SideBar:GetDescendants() do
                     if v:IsA("TextButton") then
                         TweenService:Create(v, TweenInfo.new(0.06, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {
-                            BackgroundTransparency = 1
+                            BackgroundTransparency = 0.7 -- Возвращаем прозрачность вкладок
                         }):Play()
                     end
                 end
 
                 TweenService:Create(tabButton, TweenInfo.new(0.06, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {
-                    BackgroundTransparency = 0
+                    BackgroundTransparency = 0.4 -- Уменьшаем прозрачность активной вкладки
                 }):Play()
             end)
 
@@ -295,20 +298,20 @@ function Library:Window(options)
             tabIcon.BorderSizePixel = 0
             tabIcon.Position = UDim2.new(0.0408859849, 0, 0.133333355, 0)
             tabIcon.Size = UDim2.new(0, 21, 0, 21)
-            tabIcon.Image = optionsTab.icon
+            tabIcon.Image = options.icon
             tabIcon.ImageColor3 = Color3.fromRGB(43, 154, 198)
 
             newPage.Name = "newPage"
             newPage.Parent = allPages
             newPage.Visible = false
             newPage.BackgroundColor3 = Color3.fromRGB(234, 239, 245)
-            newPage.BackgroundTransparency = 1.000
+            newPage.BackgroundTransparency = 1.000 -- Прозрачный, чтобы не перекрывать allPages
             newPage.BorderSizePixel = 0
             newPage.ClipsDescendants = false
             newPage.Position = UDim2.new(0.021598272, 0, 0.0237068962, 0)
-            newPage.Size = UDim2.new(0, options.Size.X.Offset - 216, 0, options.Size.Y.Offset - 76)
+            newPage.Size = UDim2.new(0, 442, 0, 440)
             newPage.ScrollBarThickness = 4
-            newPage.CanvasSize = UDim2.new(0,0,0,0)
+            newPage.CanvasSize = UDim2.new(0, 0, 0, 0)
 
             pageLayout.Name = "pageLayout"
             pageLayout.Parent = newPage
@@ -316,7 +319,7 @@ function Library:Window(options)
             pageLayout.CellPadding = UDim2.new(0, 12, 0, 12)
             pageLayout.CellSize = UDim2.new(0, 215, 0, -10)
             pageLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-                newPage.CanvasSize = UDim2.new(0,0,0,pageLayout.AbsoluteContentSize.Y) 
+                newPage.CanvasSize = UDim2.new(0, 0, 0, pageLayout.AbsoluteContentSize.Y) 
             end)
 
             ResizeTS(50)
@@ -335,7 +338,8 @@ function Library:Window(options)
 
                 sectionFrame.Name = "sectionFrame"
                 sectionFrame.Parent = newPage
-                sectionFrame.BackgroundColor3 = Color3.fromRGB(0, 15, 30)
+                sectionFrame.BackgroundColor3 = Color3.fromRGB(0, 15, 30) -- Тот же цвет, что у allPages
+                sectionFrame.BackgroundTransparency = 0.5 -- Такая же прозрачность, как у allPages
                 sectionFrame.BorderSizePixel = 0
                 sectionFrame.Size = UDim2.new(0, 215, 0, 134)
 
@@ -365,6 +369,7 @@ function Library:Window(options)
                 sLine.Name = "sLine"
                 sLine.Parent = sectionFrame
                 sLine.BackgroundColor3 = Color3.fromRGB(13, 28, 44)
+                sLine.BackgroundTransparency = 0.5 -- Такая же прозрачность, как у sectionFrame
                 sLine.BorderSizePixel = 0
                 sLine.Position = UDim2.new(0.0255813953, 0, 0.41538462, 0)
                 sLine.Size = UDim2.new(0, 202, 0, 3)
@@ -378,7 +383,7 @@ function Library:Window(options)
                 sectionSizeConstraint.MinSize = Vector2.new(215, 35)
 
                 local function Resize(num)
-                    sectionSizeConstraint.MinSize += Vector2.new(0, num)
+                    sectionSizeConstraint.MinSize = Vector2.new(215, sectionSizeConstraint.MinSize.Y + num)
                 end
 
                 local elements = {}
@@ -390,6 +395,7 @@ function Library:Window(options)
 
                     TextButton.Parent = sectionFrame
                     TextButton.BackgroundColor3 = Color3.fromRGB(13, 57, 84)
+                    TextButton.BackgroundTransparency = 0.5 -- Прозрачность для кнопки
                     TextButton.BorderSizePixel = 0
                     TextButton.Position = UDim2.new(0.0348837227, 0, 0.355555564, 0)
                     TextButton.Size = UDim2.new(0, 200, 0, 22)
@@ -398,7 +404,6 @@ function Library:Window(options)
                     TextButton.Font = Enum.Font.Gotham
                     TextButton.TextColor3 = Color3.fromRGB(157, 171, 182)
                     TextButton.TextSize = 14.000
-                    TextButton.BackgroundTransparency = 1
                     buttoneffect({frame = TextButton, entered = TextButton})
                     clickEffect({button = TextButton, amount = 5})
                     TextButton.MouseButton1Click:Connect(function()
@@ -459,6 +464,7 @@ function Library:Window(options)
                     toggleFrame.Name = "toggleFrame"
                     toggleFrame.Parent = toggleLabel
                     toggleFrame.BackgroundColor3 = Color3.fromRGB(4, 4, 11)
+                    toggleFrame.BackgroundTransparency = 0.5
                     toggleFrame.BorderSizePixel = 0
                     toggleFrame.AnchorPoint = Vector2.new(0.5, 0.5)
                     toggleFrame.Position = UDim2.new(0.9, 0, 0.5, 0)
@@ -479,6 +485,7 @@ function Library:Window(options)
                     toggleButton.Name = "toggleButton"
                     toggleButton.Parent = toggleFrame
                     toggleButton.BackgroundColor3 = Color3.fromRGB(77, 77, 77)
+                    toggleButton.BackgroundTransparency = 0.5
                     toggleButton.BorderSizePixel = 0
                     toggleButton.AnchorPoint = Vector2.new(0.5, 0.5)
                     toggleButton.Position = UDim2.new(0.25, 0, 0.5, 0)
@@ -562,6 +569,7 @@ function Library:Window(options)
                     sliderFrame.Name = "sliderFrame"
                     sliderFrame.Parent = sliderLabel
                     sliderFrame.BackgroundColor3 = Color3.fromRGB(29, 87, 118)
+                    sliderFrame.BackgroundTransparency = 0.5
                     sliderFrame.BorderSizePixel = 0
                     sliderFrame.AnchorPoint = Vector2.new(0.5, 0.5)
                     sliderFrame.Position = UDim2.new(1.6, 0, 0.5, 0)
@@ -576,6 +584,7 @@ function Library:Window(options)
                     sliderBall.Parent = sliderFrame
                     sliderBall.AnchorPoint = Vector2.new(0.5, 0.5)
                     sliderBall.BackgroundColor3 = Color3.fromRGB(67, 136, 231)
+                    sliderBall.BackgroundTransparency = 0.5
                     sliderBall.BorderSizePixel = 0
                     sliderBall.Position = UDim2.new(0, 0, 0.5, 0)
                     sliderBall.Size = UDim2.new(0, 14, 0, 14)
@@ -594,15 +603,15 @@ function Library:Window(options)
                             local MousePos = UIS:GetMouseLocation().X
                             local FrameSize = sliderFrame.AbsoluteSize.X
                             local FramePos = sliderFrame.AbsolutePosition.X
-                            local pos = snap((MousePos-FramePos)/FrameSize,step)
-                            percentage = math.clamp(pos,0,0.9)
+                            local pos = snap((MousePos-FramePos)/FrameSize, step)
+                            percentage = math.clamp(pos, 0, 0.9)
 
                             Value = ((((tonumber(options.max) - tonumber(options.min)) / 0.9) * percentage)) + tonumber(options.min)
                             Value = round(Value, options.float)
                             Value = math.clamp(Value, options.min, options.max)
                             sliderTextBox.Text = Value
                             options.callback(Value)
-                            sliderBall.Position = UDim2.new(percentage,0,BtnPos.Y.Scale, BtnPos.Y.Offset)
+                            sliderBall.Position = UDim2.new(percentage, 0, BtnPos.Y.Scale, BtnPos.Y.Offset)
                         end
                     end)
 
@@ -613,6 +622,7 @@ function Library:Window(options)
                     sliderTextBox.Name = "sliderTextBox"
                     sliderTextBox.Parent = sliderLabel
                     sliderTextBox.BackgroundColor3 = Color3.fromRGB(1, 7, 17)
+                    sliderTextBox.BackgroundTransparency = 0.5
                     sliderTextBox.AnchorPoint = Vector2.new(0.5, 0.5)
                     sliderTextBox.Position = UDim2.new(2.4, 0, 0.5, 0)
                     sliderTextBox.Size = UDim2.new(0, 31, 0, 15)
@@ -686,6 +696,7 @@ function Library:Window(options)
                     dropdownText.Name = "dropdownText"
                     dropdownText.Parent = dropdownLabel
                     dropdownText.BackgroundColor3 = Color3.fromRGB(2, 5, 12)
+                    dropdownText.BackgroundTransparency = 0.5
                     dropdownText.Position = UDim2.new(1.08571434, 0, 0.0909090936, 0)
                     dropdownText.Size = UDim2.new(0, 87, 0, 18)
                     dropdownText.Font = Enum.Font.Gotham
@@ -698,6 +709,7 @@ function Library:Window(options)
                     dropdownArrow.Name = "dropdownArrow"
                     dropdownArrow.Parent = dropdownText
                     dropdownArrow.BackgroundColor3 = Color3.fromRGB(2, 5, 12)
+                    dropdownArrow.BackgroundTransparency = 0.5
                     dropdownArrow.BorderSizePixel = 0
                     dropdownArrow.Position = UDim2.new(0.87356323, 0, 0.138888866, 0)
                     dropdownArrow.Size = UDim2.new(0, 11, 0, 13)
@@ -737,6 +749,7 @@ function Library:Window(options)
                     dropdownList.Name = "dropdownList"
                     dropdownList.Parent = dropdownText
                     dropdownList.BackgroundColor3 = Color3.fromRGB(2, 5, 12)
+                    dropdownList.BackgroundTransparency = 0.5
                     dropdownList.Position = UDim2.new(0, 0, 1, 0)
                     dropdownList.Size = UDim2.new(0, 87, 0, 0)
                     dropdownList.ClipsDescendants = true
@@ -811,6 +824,7 @@ function Library:Window(options)
                     textBox.Parent = Textbox
                     textBox.AnchorPoint = Vector2.new(0.5, 0.5)
                     textBox.BackgroundColor3 = Color3.fromRGB(1, 7, 17)
+                    textBox.BackgroundTransparency = 0.5
                     textBox.Position = UDim2.new(0.850000024, 0, 0.5, 0)
                     textBox.Size = UDim2.new(0, 53, 0, 15)
                     textBox.Font = Enum.Font.Gotham
@@ -897,6 +911,7 @@ function Library:Window(options)
                     colorpickerFrame.Parent = Colorpicker
                     colorpickerFrame.Visible = false
                     colorpickerFrame.BackgroundColor3 = Color3.fromRGB(0, 10, 21)
+                    colorpickerFrame.BackgroundTransparency = 0.5
                     colorpickerFrame.Position = UDim2.new(1.15, 0, 0.5, 0)
                     colorpickerFrame.Size = UDim2.new(0, 251, 0, 221)
                     colorpickerFrame.ZIndex = 15
@@ -928,6 +943,7 @@ function Library:Window(options)
                     Darkness.Name = "Darkness"
                     Darkness.Parent = colorpickerFrame
                     Darkness.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+                    Darkness.BackgroundTransparency = 0.5
                     Darkness.BorderSizePixel = 0
                     Darkness.Position = UDim2.new(0.831940293, 0, 0.0680000708, 0)
                     Darkness.Size = UDim2.new(0, 33, 0, 161)
@@ -938,6 +954,7 @@ function Library:Window(options)
                     DarknessCircle.Name = "DarknessCircle"
                     DarknessCircle.Parent = Darkness
                     DarknessCircle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+                    DarknessCircle.BackgroundTransparency = 0.5
                     DarknessCircle.BorderSizePixel = 0
                     DarknessCircle.Position = UDim2.new(0, 0, 0, 0)
                     DarknessCircle.Size = UDim2.new(0, 33, 0, 5)
@@ -946,6 +963,7 @@ function Library:Window(options)
                     colorHex.Name = "colorHex"
                     colorHex.Parent = colorpickerFrame
                     colorHex.BackgroundColor3 = Color3.fromRGB(9, 8, 13)
+                    colorHex.BackgroundTransparency = 0.5
                     colorHex.Position = UDim2.new(0.0717131495, 0, 0.850678742, 0)
                     colorHex.Size = UDim2.new(0, 94, 0, 24)
                     colorHex.Font = Enum.Font.GothamSemibold
@@ -956,6 +974,7 @@ function Library:Window(options)
 
                     Copy.Parent = colorpickerFrame
                     Copy.BackgroundColor3 = Color3.fromRGB(9, 8, 13)
+                    Copy.BackgroundTransparency = 0.5
                     Copy.Position = UDim2.new(0.72111553, 0, 0.850678742, 0)
                     Copy.Size = UDim2.new(0, 60, 0, 24)
                     Copy.AutoButtonColor = false
@@ -983,7 +1002,7 @@ function Library:Window(options)
                     local v2,udim2              = Vector2.new,UDim2.new
 
                     local UserInputService  = game:GetService("UserInputService")
-                    local getmouse              = game.Players.LocalPlayer:GetMouse()
+                    local getmouse          = game.Players.LocalPlayer:GetMouse()
 
                     local WheelDown         = false
                     local SlideDown         = false

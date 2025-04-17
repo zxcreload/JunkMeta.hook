@@ -22,7 +22,6 @@ local function Notify(tt, tx)
 end
 
 local function Dragify(frame, parent)
-
     parent = parent or frame
 
     local dragging = false
@@ -95,13 +94,14 @@ local function clickEffect(options)
 end
 
 function Library:Toggle(value)
-    if game:GetServer("CoreGui"):FindFirstChild("Neverlose") == nil then return end
-    enabled = (type(value) == "boolean" and value) or game:GetServer("CoreGui"):FindFirstChild("Neverlose").Enabled
-    game:GetServer("CoreGui"):FindFirstChild("Neverlose").Enabled = not enabled
+    if game:GetService("CoreGui"):FindFirstChild("Neverlose") == nil then return end
+    enabled = (type(value) == "boolean" and value) or game:GetService("CoreGui"):FindFirstChild("Neverlose").Enabled
+    game:GetService("CoreGui"):FindFirstChild("Neverlose").Enabled = not enabled
 end
 
 function Library:Window(options)
     options.text = options.text or "NEVERLOSE"
+    options.Size = options.Size or UDim2.new(0, 658, 0, 516)
 
     local SG = Instance.new("ScreenGui")
     local Body = Instance.new("Frame")
@@ -115,8 +115,6 @@ function Library:Window(options)
     local TopBar = Instance.new("Frame")
     local tbLine = Instance.new("Frame")
     local Title = Instance.new("TextLabel")
-    --local saveBtn = Instance.new("TextButton")
-    --local saveLabel = Instance.new("ImageLabel")
 
     local allPages = Instance.new("Frame")
     local tabContainer = Instance.new("Frame")
@@ -130,7 +128,7 @@ function Library:Window(options)
     Body.BackgroundColor3 = Color3.fromRGB(9, 8, 13)
     Body.BorderSizePixel = 0
     Body.Position = UDim2.new(0.465730786, 0, 0.5, 0)
-    Body.Size = UDim2.new(0, 658, 0, 516)
+    Body.Size = options.Size
 
     bodyCorner.CornerRadius = UDim.new(0, 4)
     bodyCorner.Name = "bodyCorner"
@@ -140,7 +138,7 @@ function Library:Window(options)
     SideBar.Parent = Body
     SideBar.BackgroundColor3 = Color3.fromRGB(26, 36, 48)
     SideBar.BorderSizePixel = 0
-    SideBar.Size = UDim2.new(0, 187, 0, 516)
+    SideBar.Size = UDim2.new(0, 187, 0, options.Size.Y.Offset)
 
     sidebarCorner.CornerRadius = UDim.new(0, 4)
     sidebarCorner.Name = "sidebarCorner"
@@ -151,7 +149,7 @@ function Library:Window(options)
     sbLine.BackgroundColor3 = Color3.fromRGB(15, 23, 36)
     sbLine.BorderSizePixel = 0
     sbLine.Position = UDim2.new(0.99490571, 0, 0, 0)
-    sbLine.Size = UDim2.new(0, 3, 0, 516)
+    sbLine.Size = UDim2.new(0, 3, 0, options.Size.Y.Offset)
 
     TopBar.Name = "TopBar"
     TopBar.Parent = Body
@@ -160,14 +158,14 @@ function Library:Window(options)
     TopBar.BorderColor3 = Color3.fromRGB(14, 21, 32)
     TopBar.BorderSizePixel = 0
     TopBar.Position = UDim2.new(0.25166446, 0, 0, 0)
-    TopBar.Size = UDim2.new(0, 562, 0, 49)
+    TopBar.Size = UDim2.new(0, options.Size.X.Offset - 96, 0, 49)
 
     tbLine.Name = "tbLine"
     tbLine.Parent = TopBar
     tbLine.BackgroundColor3 = Color3.fromRGB(15, 23, 36)
     tbLine.BorderSizePixel = 0
     tbLine.Position = UDim2.new(0.0400355868, 0, 1, 0)
-    tbLine.Size = UDim2.new(0, 469, 0, 3)
+    tbLine.Size = UDim2.new(0, options.Size.X.Offset - 189, 0, 3)
 
     Title.Name = "Title"
     Title.Parent = SideBar
@@ -182,36 +180,13 @@ function Library:Window(options)
     Title.TextSize = 28.000
     Title.TextWrapped = true
 
-    --[[saveBtn.Name = "saveBtn"
-    saveBtn.Parent = TopBar
-    saveBtn.AnchorPoint = Vector2.new(0.5, 0.5)
-    saveBtn.BackgroundColor3 = Color3.fromRGB(9, 8, 13)
-    saveBtn.Position = UDim2.new(0.146918148, 0, 0.479591846, 0)
-    saveBtn.Size = UDim2.new(0, 88, 0, 20)
-    saveBtn.AutoButtonColor = false
-    saveBtn.Font = Enum.Font.GothamBold
-    saveBtn.Text = "   Save"
-    saveBtn.TextColor3 = Color3.fromRGB(132, 146, 153)
-    saveBtn.TextSize = 14.000
-
-    saveLabel.Name = "saveLabel"
-    saveLabel.Parent = saveBtn
-    saveLabel.BackgroundColor3 = Color3.fromRGB(234, 239, 245)
-    saveLabel.BackgroundTransparency = 1.000
-    saveLabel.BorderSizePixel = 0
-    saveLabel.Position = UDim2.new(0.0862553269, 0, 0.0500000007, 0)
-    saveLabel.Size = UDim2.new(0, 18, 0, 18)
-    saveLabel.Image = "rbxassetid://7999984136"
-    saveLabel.ImageColor3 = Color3.fromRGB(132, 146, 153)
-    ]]
-
     allPages.Name = "allPages"
     allPages.Parent = Body
     allPages.BackgroundColor3 = Color3.fromRGB(234, 239, 245)
     allPages.BackgroundTransparency = 1.000
     allPages.BorderSizePixel = 0
     allPages.Position = UDim2.new(0.29508087, 0, 0.100775197, 0)
-    allPages.Size = UDim2.new(0, 463, 0, 464)
+    allPages.Size = UDim2.new(0, options.Size.X.Offset - 195, 0, options.Size.Y.Offset - 52)
 
     tabContainer.Name = "tabContainer"
     tabContainer.Parent = SideBar
@@ -219,12 +194,12 @@ function Library:Window(options)
     tabContainer.BackgroundTransparency = 1.000
     tabContainer.BorderSizePixel = 0
     tabContainer.Position = UDim2.new(0, 0, 0.100775197, 0)
-    tabContainer.Size = UDim2.new(0, 187, 0, 464)
+    tabContainer.Size = UDim2.new(0, 187, 0, options.Size.Y.Offset - 52)
 
     local tabsections = {}
 
-    function tabsections:TabSection(options)
-        options.text = options.text or "Tab Section"
+    function tabsections:TabSection(optionsTabSection)
+        optionsTabSection.text = optionsTabSection.text or "Tab Section"
 
         local tabLayout = Instance.new("UIListLayout")
         local tabSection = Instance.new("Frame")
@@ -252,7 +227,7 @@ function Library:Window(options)
         tabSectionLabel.BorderSizePixel = 0
         tabSectionLabel.Size = UDim2.new(0, 190, 0, 22)
         tabSectionLabel.Font = Enum.Font.Gotham
-        tabSectionLabel.Text = "     ".. options.text
+        tabSectionLabel.Text = "     ".. optionsTabSection.text
         tabSectionLabel.TextColor3 = Color3.fromRGB(79, 107, 126)
         tabSectionLabel.TextSize = 17.000
         tabSectionLabel.TextXAlignment = Enum.TextXAlignment.Left
@@ -265,9 +240,9 @@ function Library:Window(options)
 
         local tabs = {}
 
-        function tabs:Tab(options)
-            options.text = options.text or "New Tab"
-            options.icon = options.icon or "rbxassetid://7999345313"
+        function tabs:Tab(optionsTab)
+            optionsTab.text = optionsTab.text or "New Tab"
+            optionsTab.icon = optionsTab.icon or "rbxassetid://7999345313"
 
             local tabButton = Instance.new("TextButton")
             local tabButtonCorner = Instance.new("UICorner")
@@ -284,7 +259,7 @@ function Library:Window(options)
             tabButton.Size = UDim2.new(0, 165, 0, 30)
             tabButton.AutoButtonColor = false
             tabButton.Font = Enum.Font.GothamSemibold
-            tabButton.Text = "         " .. options.text
+            tabButton.Text = "         " .. optionsTab.text
             tabButton.TextColor3 = Color3.fromRGB(234, 239, 245)
             tabButton.TextSize = 14.000
             tabButton.BackgroundTransparency = 1
@@ -320,7 +295,7 @@ function Library:Window(options)
             tabIcon.BorderSizePixel = 0
             tabIcon.Position = UDim2.new(0.0408859849, 0, 0.133333355, 0)
             tabIcon.Size = UDim2.new(0, 21, 0, 21)
-            tabIcon.Image = options.icon
+            tabIcon.Image = optionsTab.icon
             tabIcon.ImageColor3 = Color3.fromRGB(43, 154, 198)
 
             newPage.Name = "newPage"
@@ -331,7 +306,7 @@ function Library:Window(options)
             newPage.BorderSizePixel = 0
             newPage.ClipsDescendants = false
             newPage.Position = UDim2.new(0.021598272, 0, 0.0237068962, 0)
-            newPage.Size = UDim2.new(0, 442, 0, 440)
+            newPage.Size = UDim2.new(0, options.Size.X.Offset - 216, 0, options.Size.Y.Offset - 76)
             newPage.ScrollBarThickness = 4
             newPage.CanvasSize = UDim2.new(0,0,0,0)
 
@@ -863,7 +838,6 @@ function Library:Window(options)
                 function elements:Colorpicker(options)
                     if not options.text or not options.color or not options.callback then Notify("Colorpicker", "Missing arguments!") return end
 
-
                     local hue, sat, val = Color3.toHSV(options.color)
 
                     local Colorpicker = Instance.new("Frame")
@@ -1015,24 +989,24 @@ function Library:Window(options)
                     local SlideDown         = false
 
                     local function toPolar(v)
-                        return atan2(v.y, v.x), v.magnitude;
+                        return atan2(v.y, v.x), v.magnitude
                     end
 
                     local function radToDeg(x)
-                        return ((x + pi) / (2 * pi)) * 360;
+                        return ((x + pi) / (2 * pi)) * 360
                     end
-                    local hue, saturation, value = 0, 0, 1;
+                    local hue, saturation, value = 0, 0, 1
                     local color = {1,1,1}
 
                     local function to_hex(color)
                         return string.format("#%02X%02X%02X", color.R * 255, color.G * 255, color.B * 255)
                     end
                     local function update()
-                        local r = color[1];
-                        local g = color[2];
-                        local b = color[3];
+                        local r = color[1]
+                        local g = color[2]
+                        local b = color[3]
 
-                        local c = fromHSV(r, g, b);
+                        local c = fromHSV(r, g, b)
                         colorHex.Text = tostring(to_hex(c))
                     end
                     local function mouseLocation()
@@ -1052,7 +1026,7 @@ function Library:Window(options)
                         DarknessCircle.Position = UDim2.new(0,0,y,-cy)
                         options.callback(realcolor)
 
-                        update();
+                        update()
                     end
                     local function UpdateRing(iX,iY)
                         local ml = mouseLocation()
@@ -1083,9 +1057,8 @@ function Library:Window(options)
                         Darkness.BackgroundColor3 = realcolor
                         DarknessCircle.BackgroundColor3 = realcolor
                         options.callback(realcolor)
-                        update();
+                        update()
                     end
-
 
                     RGB.MouseButton1Down:Connect(function()
                         WheelDown = true
@@ -1095,7 +1068,6 @@ function Library:Window(options)
                         SlideDown = true
                         UpdateSlide(getmouse.X,getmouse.Y)
                     end)
-
 
                     UserInputService.InputEnded:Connect(function(input)
                         if input.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -1241,7 +1213,16 @@ function Library:Window(options)
         return tabs
     end
 
+    Library.Holder = Body
     return tabsections
+end
+
+function Library:ChangeAccent(color)
+    for _, v in pairs(game.CoreGui.Neverlose:GetDescendants()) do
+        if v:IsA("TextButton") or v:IsA("ImageButton") then
+            v.BackgroundColor3 = color
+        end
+    end
 end
 
 return Library

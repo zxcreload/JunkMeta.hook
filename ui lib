@@ -5,9 +5,9 @@ local NeverloseVersion = "v1.1A."
 local TweenService = game:GetService("TweenService")
 local input = game:GetService("UserInputService")
 
-for i,v in next, game.CoreGui:GetChildren() do
+for i, v in next, game.CoreGui:GetChildren() do
     if v:IsA("ScreenGui") and v.Name == "Neverlose" then
-        v:Destroy() 
+        v:Destroy()
     end
 end
 
@@ -57,7 +57,7 @@ end
 
 local function round(num, bracket)
     bracket = bracket or 1
-    local a = math.floor(num/bracket + (math.sign(num) * 0.5)) * bracket
+    local a = math.floor(num / bracket + (math.sign(num) * 0.5)) * bracket
     if a < 0 then
         a = a + bracket
     end
@@ -87,9 +87,9 @@ local function clickEffect(options)
     options.button.MouseButton1Click:Connect(function()
         local new = options.button.TextSize - tonumber(options.amount)
         local revert = new + tonumber(options.amount)
-        TweenService:Create(options.button, TweenInfo.new(0.15, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out), {TextSize = new}):Play()
+        TweenService:Create(options.button, TweenInfo.new(0.15, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out), { TextSize = new }):Play()
         wait(0.1)
-        TweenService:Create(options.button, TweenInfo.new(0.1, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out), {TextSize = revert}):Play()
+        TweenService:Create(options.button, TweenInfo.new(0.1, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out), { TextSize = revert }):Play()
     end)
 end
 
@@ -97,6 +97,13 @@ function Library:Toggle(value)
     if game:GetService("CoreGui"):FindFirstChild("Neverlose") == nil then return end
     enabled = (type(value) == "boolean" and value) or game:GetService("CoreGui"):FindFirstChild("Neverlose").Enabled
     game:GetService("CoreGui"):FindFirstChild("Neverlose").Enabled = not enabled
+end
+
+function Library:Destroy()
+    local gui = game:GetService("CoreGui"):FindFirstChild("Neverlose")
+    if gui then
+        gui:Destroy()
+    end
 end
 
 function Library:Window(options)
@@ -137,7 +144,7 @@ function Library:Window(options)
     SideBar.Name = "SideBar"
     SideBar.Parent = Body
     SideBar.BackgroundColor3 = Color3.fromRGB(0, 15, 30)
-    SideBar.BackgroundTransparency = 0.9 -- Увеличена прозрачность для соответствия второму фото
+    SideBar.BackgroundTransparency = 0.9
     SideBar.BorderSizePixel = 0
     SideBar.Size = UDim2.new(0, 187, 0, 516)
 
@@ -148,7 +155,7 @@ function Library:Window(options)
     sbLine.Name = "sbLine"
     sbLine.Parent = SideBar
     sbLine.BackgroundColor3 = Color3.fromRGB(13, 28, 44)
-    sbLine.BackgroundTransparency = 0.9 -- Увеличена прозрачность
+    sbLine.BackgroundTransparency = 0.9
     sbLine.BorderSizePixel = 0
     sbLine.Position = UDim2.new(0.99490571, 0, 0, 0)
     sbLine.Size = UDim2.new(0, 3, 0, 516)
@@ -165,7 +172,7 @@ function Library:Window(options)
     tbLine.Name = "tbLine"
     tbLine.Parent = TopBar
     tbLine.BackgroundColor3 = Color3.fromRGB(13, 28, 44)
-    tbLine.BackgroundTransparency = 0.9 -- Увеличена прозрачность
+    tbLine.BackgroundTransparency = 0.9
     tbLine.BorderSizePixel = 0
     tbLine.Position = UDim2.new(0.0400355868, 0, 1, 0)
     tbLine.Size = UDim2.new(0, 469, 0, 3)
@@ -186,7 +193,7 @@ function Library:Window(options)
     allPages.Name = "allPages"
     allPages.Parent = Body
     allPages.BackgroundColor3 = Color3.fromRGB(0, 15, 30)
-    allPages.BackgroundTransparency = 0.9 -- Увеличена прозрачность для соответствия второму фото
+    allPages.BackgroundTransparency = 0.9
     allPages.BorderSizePixel = 0
     allPages.Position = UDim2.new(0.29508087, 0, 0.100775197, 0)
     allPages.Size = UDim2.new(0, 463, 0, 464)
@@ -230,7 +237,7 @@ function Library:Window(options)
         tabSectionLabel.BorderSizePixel = 0
         tabSectionLabel.Size = UDim2.new(0, 190, 0, 22)
         tabSectionLabel.Font = Enum.Font.Gotham
-        tabSectionLabel.Text = "     ".. options.text
+        tabSectionLabel.Text = "     " .. options.text
         tabSectionLabel.TextColor3 = Color3.fromRGB(79, 107, 126)
         tabSectionLabel.TextSize = 17.000
         tabSectionLabel.TextXAlignment = Enum.TextXAlignment.Left
@@ -257,7 +264,7 @@ function Library:Window(options)
             tabButton.Name = "tabButton"
             tabButton.Parent = tabSection
             tabButton.BackgroundColor3 = Color3.fromRGB(0, 15, 30)
-            tabButton.BackgroundTransparency = 0.9 -- Увеличена прозрачность
+            tabButton.BackgroundTransparency = 0.9
             tabButton.BorderSizePixel = 0
             tabButton.Position = UDim2.new(0.0714285746, 0, 0.402777791, 0)
             tabButton.Size = UDim2.new(0, 165, 0, 30)
@@ -268,22 +275,22 @@ function Library:Window(options)
             tabButton.TextSize = 14.000
             tabButton.TextXAlignment = Enum.TextXAlignment.Left
             tabButton.MouseButton1Click:Connect(function()
-                for i,v in next, allPages:GetChildren() do
+                for i, v in next, allPages:GetChildren() do
                     v.Visible = false
                 end
 
                 newPage.Visible = true
 
-                for i,v in next, SideBar:GetDescendants() do
+                for i, v in next, SideBar:GetDescendants() do
                     if v:IsA("TextButton") then
                         TweenService:Create(v, TweenInfo.new(0.06, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {
-                            BackgroundTransparency = 0.9 -- Возвращаем прозрачность вкладок
+                            BackgroundTransparency = 0.9
                         }):Play()
                     end
                 end
 
                 TweenService:Create(tabButton, TweenInfo.new(0.06, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {
-                    BackgroundTransparency = 0.6 -- Уменьшаем прозрачность активной вкладки
+                    BackgroundTransparency = 0.6
                 }):Play()
             end)
 
@@ -319,7 +326,7 @@ function Library:Window(options)
             pageLayout.CellPadding = UDim2.new(0, 12, 0, 12)
             pageLayout.CellSize = UDim2.new(0, 215, 0, -10)
             pageLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-                newPage.CanvasSize = UDim2.new(0, 0, 0, pageLayout.AbsoluteContentSize.Y) 
+                newPage.CanvasSize = UDim2.new(0, 0, 0, pageLayout.AbsoluteContentSize.Y)
             end)
 
             ResizeTS(50)
@@ -339,7 +346,7 @@ function Library:Window(options)
                 sectionFrame.Name = "sectionFrame"
                 sectionFrame.Parent = newPage
                 sectionFrame.BackgroundColor3 = Color3.fromRGB(0, 15, 30)
-                sectionFrame.BackgroundTransparency = 0.9 -- Увеличена прозрачность
+                sectionFrame.BackgroundTransparency = 0.9
                 sectionFrame.BorderSizePixel = 0
                 sectionFrame.Size = UDim2.new(0, 215, 0, 134)
 
@@ -369,7 +376,7 @@ function Library:Window(options)
                 sLine.Name = "sLine"
                 sLine.Parent = sectionFrame
                 sLine.BackgroundColor3 = Color3.fromRGB(13, 28, 44)
-                sLine.BackgroundTransparency = 0.9 -- Увеличена прозрачность
+                sLine.BackgroundTransparency = 0.9
                 sLine.BorderSizePixel = 0
                 sLine.Position = UDim2.new(0.0255813953, 0, 0.41538462, 0)
                 sLine.Size = UDim2.new(0, 202, 0, 3)
@@ -395,7 +402,7 @@ function Library:Window(options)
 
                     TextButton.Parent = sectionFrame
                     TextButton.BackgroundColor3 = Color3.fromRGB(13, 57, 84)
-                    TextButton.BackgroundTransparency = 0.9 -- Увеличена прозрачность
+                    TextButton.BackgroundTransparency = 0.9
                     TextButton.BorderSizePixel = 0
                     TextButton.Position = UDim2.new(0.0348837227, 0, 0.355555564, 0)
                     TextButton.Size = UDim2.new(0, 200, 0, 22)
@@ -404,8 +411,8 @@ function Library:Window(options)
                     TextButton.Font = Enum.Font.Gotham
                     TextButton.TextColor3 = Color3.fromRGB(157, 171, 182)
                     TextButton.TextSize = 14.000
-                    buttoneffect({frame = TextButton, entered = TextButton})
-                    clickEffect({button = TextButton, amount = 5})
+                    buttoneffect({ frame = TextButton, entered = TextButton })
+                    clickEffect({ button = TextButton, amount = 5 })
                     TextButton.MouseButton1Click:Connect(function()
                         options.callback()
                     end)
@@ -420,16 +427,9 @@ function Library:Window(options)
                     local toggleFrame = Instance.new("TextButton")
                     local togFrameCorner = Instance.new("UICorner")
                     local toggleButton = Instance.new("TextButton")
-                    local togBtnCorner = Instance.new("UICorner")
+                    local togButtonCorner = Instance.new("UICorner")
 
                     local State = options.state or false
-
-                    if options.state then
-                        toggleButton.Position = UDim2.new(0.74, 0, 0.5, 0)
-                        toggleLabel.TextColor3 = Color3.fromRGB(234, 239, 246)
-                        toggleButton.BackgroundColor3 = Color3.fromRGB(2, 162, 243)
-                        toggleFrame.BackgroundColor3 = Color3.fromRGB(2, 23, 49)
-                    end
 
                     toggleLabel.Name = "toggleLabel"
                     toggleLabel.Parent = sectionFrame
@@ -439,10 +439,10 @@ function Library:Window(options)
                     toggleLabel.Size = UDim2.new(0, 200, 0, 22)
                     toggleLabel.Font = Enum.Font.Gotham
                     toggleLabel.Text = " " .. options.text
-                    toggleLabel.TextColor3 = Color3.fromRGB(157, 171, 182)
+                    toggleLabel.TextColor3 = State and Color3.fromRGB(234, 239, 246) or Color3.fromRGB(157, 171, 182)
                     toggleLabel.TextSize = 14.000
                     toggleLabel.TextXAlignment = Enum.TextXAlignment.Left
-                    buttoneffect({frame = toggleLabel, entered = toggleLabel})
+                    buttoneffect({ frame = toggleLabel, entered = toggleLabel })
 
                     local function PerformToggle()
                         State = not State
@@ -464,7 +464,7 @@ function Library:Window(options)
                     toggleFrame.Name = "toggleFrame"
                     toggleFrame.Parent = toggleLabel
                     toggleFrame.BackgroundColor3 = Color3.fromRGB(4, 4, 11)
-                    toggleFrame.BackgroundTransparency = 0.9 -- Увеличена прозрачность
+                    toggleFrame.BackgroundTransparency = 0.9
                     toggleFrame.BorderSizePixel = 0
                     toggleFrame.AnchorPoint = Vector2.new(0.5, 0.5)
                     toggleFrame.Position = UDim2.new(0.9, 0, 0.5, 0)
@@ -485,7 +485,7 @@ function Library:Window(options)
                     toggleButton.Name = "toggleButton"
                     toggleButton.Parent = toggleFrame
                     toggleButton.BackgroundColor3 = Color3.fromRGB(77, 77, 77)
-                    toggleButton.BackgroundTransparency = 0.9 -- Увеличена прозрачность
+                    toggleButton.BackgroundTransparency = 0.9
                     toggleButton.BorderSizePixel = 0
                     toggleButton.AnchorPoint = Vector2.new(0.5, 0.5)
                     toggleButton.Position = UDim2.new(0.25, 0, 0.5, 0)
@@ -499,9 +499,28 @@ function Library:Window(options)
                         PerformToggle()
                     end)
 
-                    togBtnCorner.CornerRadius = UDim.new(0, 50)
-                    togBtnCorner.Name = "togFrameCorner"
-                    togBtnCorner.Parent = toggleButton
+                    togButtonCorner.CornerRadius = UDim.new(0, 50)
+                    togButtonCorner.Name = "togButtonCorner"
+                    togButtonCorner.Parent = toggleButton
+
+                    toggleFrame.MouseEnter:Connect(function()
+                        TweenService:Create(toggleFrame, TweenInfo.new(0.1, Enum.EasingStyle.Quart, Enum.EasingDirection.InOut), {
+                            BackgroundTransparency = 0.8
+                        }):Play()
+                    end)
+
+                    toggleFrame.MouseLeave:Connect(function()
+                        TweenService:Create(toggleFrame, TweenInfo.new(0.1, Enum.EasingStyle.Quart, Enum.EasingDirection.InOut), {
+                            BackgroundTransparency = 0.9
+                        }):Play()
+                    end)
+
+                    if State then
+                        toggleButton.Position = UDim2.new(0.74, 0, 0.5, 0)
+                        toggleButton.BackgroundColor3 = Color3.fromRGB(2, 162, 243)
+                        toggleFrame.BackgroundColor3 = Color3.fromRGB(2, 23, 49)
+                        toggleLabel.TextColor3 = Color3.fromRGB(234, 239, 246)
+                    end
 
                     Resize(25)
                 end
@@ -515,7 +534,7 @@ function Library:Window(options)
                     local sliderBall = Instance.new("TextButton")
                     local sliderBallCorner = Instance.new("UICorner")
                     local sliderTextBox = Instance.new("TextBox")
-                    buttoneffect({frame = sliderLabel, entered = Slider})
+                    buttoneffect({ frame = sliderLabel, entered = Slider })
 
                     local Value
                     local Held = false
@@ -531,7 +550,7 @@ function Library:Window(options)
                         if factor == 0 then
                             return number
                         else
-                            return math.floor(number/factor+0.5)*factor
+                            return math.floor(number / factor + 0.5) * factor
                         end
                     end
 
@@ -569,7 +588,7 @@ function Library:Window(options)
                     sliderFrame.Name = "sliderFrame"
                     sliderFrame.Parent = sliderLabel
                     sliderFrame.BackgroundColor3 = Color3.fromRGB(29, 87, 118)
-                    sliderFrame.BackgroundTransparency = 0.9 -- Увеличена прозрачность
+                    sliderFrame.BackgroundTransparency = 0.9
                     sliderFrame.BorderSizePixel = 0
                     sliderFrame.AnchorPoint = Vector2.new(0.5, 0.5)
                     sliderFrame.Position = UDim2.new(1.6, 0, 0.5, 0)
@@ -584,7 +603,7 @@ function Library:Window(options)
                     sliderBall.Parent = sliderFrame
                     sliderBall.AnchorPoint = Vector2.new(0.5, 0.5)
                     sliderBall.BackgroundColor3 = Color3.fromRGB(67, 136, 231)
-                    sliderBall.BackgroundTransparency = 0.9 -- Увеличена прозрачность
+                    sliderBall.BackgroundTransparency = 0.9
                     sliderBall.BorderSizePixel = 0
                     sliderBall.Position = UDim2.new(0, 0, 0.5, 0)
                     sliderBall.Size = UDim2.new(0, 14, 0, 14)
@@ -603,10 +622,10 @@ function Library:Window(options)
                             local MousePos = UIS:GetMouseLocation().X
                             local FrameSize = sliderFrame.AbsoluteSize.X
                             local FramePos = sliderFrame.AbsolutePosition.X
-                            local pos = snap((MousePos-FramePos)/FrameSize, step)
+                            local pos = snap((MousePos - FramePos) / FrameSize, step)
                             percentage = math.clamp(pos, 0, 0.9)
 
-                            Value = ((((tonumber(options.max) - tonumber(options.min)) / 0.9) * percentage)) + tonumber(options.min)
+                            Value = (((tonumber(options.max) - tonumber(options.min)) / 0.9) * percentage) + tonumber(options.min)
                             Value = round(Value, options.float)
                             Value = math.clamp(Value, options.min, options.max)
                             sliderTextBox.Text = Value
@@ -622,7 +641,7 @@ function Library:Window(options)
                     sliderTextBox.Name = "sliderTextBox"
                     sliderTextBox.Parent = sliderLabel
                     sliderTextBox.BackgroundColor3 = Color3.fromRGB(1, 7, 17)
-                    sliderTextBox.BackgroundTransparency = 0.9 -- Увеличена прозрачность
+                    sliderTextBox.BackgroundTransparency = 0.9
                     sliderTextBox.AnchorPoint = Vector2.new(0.5, 0.5)
                     sliderTextBox.Position = UDim2.new(2.4, 0, 0.5, 0)
                     sliderTextBox.Size = UDim2.new(0, 31, 0, 15)
@@ -633,11 +652,15 @@ function Library:Window(options)
                     sliderTextBox.TextWrapped = true
 
                     sliderTextBox.Focused:Connect(function()
-                        TweenService:Create(sliderLabel, TweenInfo.new(0.06, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {TextColor3 = Color3.fromRGB(234, 239, 246)}):Play()
+                        TweenService:Create(sliderLabel, TweenInfo.new(0.06, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {
+                            TextColor3 = Color3.fromRGB(234, 239, 246)
+                        }):Play()
                     end)
 
                     sliderTextBox.FocusLost:Connect(function(Enter)
-                        TweenService:Create(sliderLabel, TweenInfo.new(0.06, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {TextColor3 = Color3.fromRGB(157, 171, 182)}):Play()
+                        TweenService:Create(sliderLabel, TweenInfo.new(0.06, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {
+                            TextColor3 = Color3.fromRGB(157, 171, 182)
+                        }):Play()
                         if Enter then
                             if sliderTextBox.Text ~= nil and sliderTextBox.Text ~= "" then
                                 if tonumber(sliderTextBox.Text) > options.max then
@@ -669,7 +692,7 @@ function Library:Window(options)
                     local dropdownList = Instance.new("Frame")
 
                     local dropListLayout = Instance.new("UIListLayout")
-                    buttoneffect({frame = dropdownLabel, entered = Dropdown})
+                    buttoneffect({ frame = dropdownLabel, entered = Dropdown })
 
                     Dropdown.Name = "Dropdown"
                     Dropdown.Parent = sectionFrame
@@ -696,7 +719,7 @@ function Library:Window(options)
                     dropdownText.Name = "dropdownText"
                     dropdownText.Parent = dropdownLabel
                     dropdownText.BackgroundColor3 = Color3.fromRGB(2, 5, 12)
-                    dropdownText.BackgroundTransparency = 0.9 -- Увеличена прозрачность
+                    dropdownText.BackgroundTransparency = 0.9
                     dropdownText.Position = UDim2.new(1.08571434, 0, 0.0909090936, 0)
                     dropdownText.Size = UDim2.new(0, 87, 0, 18)
                     dropdownText.Font = Enum.Font.Gotham
@@ -709,7 +732,7 @@ function Library:Window(options)
                     dropdownArrow.Name = "dropdownArrow"
                     dropdownArrow.Parent = dropdownText
                     dropdownArrow.BackgroundColor3 = Color3.fromRGB(2, 5, 12)
-                    dropdownArrow.BackgroundTransparency = 0.9 -- Увеличена прозрачность
+                    dropdownArrow.BackgroundTransparency = 0.9
                     dropdownArrow.BorderSizePixel = 0
                     dropdownArrow.Position = UDim2.new(0.87356323, 0, 0.138888866, 0)
                     dropdownArrow.Size = UDim2.new(0, 11, 0, 13)
@@ -749,7 +772,7 @@ function Library:Window(options)
                     dropdownList.Name = "dropdownList"
                     dropdownList.Parent = dropdownText
                     dropdownList.BackgroundColor3 = Color3.fromRGB(2, 5, 12)
-                    dropdownList.BackgroundTransparency = 0.9 -- Увеличена прозрачность
+                    dropdownList.BackgroundTransparency = 0.9
                     dropdownList.Position = UDim2.new(0, 0, 1, 0)
                     dropdownList.Size = UDim2.new(0, 87, 0, 0)
                     dropdownList.ClipsDescendants = true
@@ -761,7 +784,7 @@ function Library:Window(options)
                     dropListLayout.SortOrder = Enum.SortOrder.LayoutOrder
                     Resize(25)
 
-                    for i,v in next, options.list do
+                    for i, v in next, options.list do
                         local dropdownBtn = Instance.new("TextButton")
                         local Count = 1
 
@@ -778,7 +801,7 @@ function Library:Window(options)
                         dropdownBtn.TextSize = 12.000
                         dropdownBtn.Text = v
                         dropdownBtn.ZIndex = 15
-                        clickEffect({button = dropdownBtn, amount = 5})
+                        clickEffect({ button = dropdownBtn, amount = 5 })
 
                         Count = Count + 1
                         dropdownList.ZIndex -= Count
@@ -805,7 +828,7 @@ function Library:Window(options)
                     Textbox.BorderSizePixel = 0
                     Textbox.Position = UDim2.new(0.0348837227, 0, 0.945454538, 0)
                     Textbox.Size = UDim2.new(0, 200, 0, 22)
-                    buttoneffect({frame = textBoxLabel, entered = Textbox})
+                    buttoneffect({ frame = textBoxLabel, entered = Textbox })
 
                     textBoxLabel.Name = "textBoxLabel"
                     textBoxLabel.Parent = Textbox
@@ -824,7 +847,7 @@ function Library:Window(options)
                     textBox.Parent = Textbox
                     textBox.AnchorPoint = Vector2.new(0.5, 0.5)
                     textBox.BackgroundColor3 = Color3.fromRGB(1, 7, 17)
-                    textBox.BackgroundTransparency = 0.9 -- Увеличена прозрачность
+                    textBox.BackgroundTransparency = 0.9
                     textBox.Position = UDim2.new(0.850000024, 0, 0.5, 0)
                     textBox.Size = UDim2.new(0, 53, 0, 15)
                     textBox.Font = Enum.Font.Gotham
@@ -836,11 +859,15 @@ function Library:Window(options)
                     Resize(25)
 
                     textBox.Focused:Connect(function()
-                        TweenService:Create(textBoxLabel, TweenInfo.new(0.06, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {TextColor3 = Color3.fromRGB(234, 239, 246)}):Play()
+                        TweenService:Create(textBoxLabel, TweenInfo.new(0.06, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+                            TextColor3 = Color3.fromRGB(234, 239, 246)
+                        }):Play()
                     end)
 
                     textBox.FocusLost:Connect(function(Enter)
-                        TweenService:Create(textBoxLabel, TweenInfo.new(0.06, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {TextColor3 = Color3.fromRGB(157, 171, 182)}):Play()
+                        TweenService:Create(textBoxLabel, TweenInfo.new(0.06, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+                            TextColor3 = Color3.fromRGB(157, 171, 182)
+                        }):Play()
                         if Enter then
                             if textBox.Text ~= nil and textBox.Text ~= "" then
                                 options.callback(textBox.Text)
@@ -864,9 +891,9 @@ function Library:Window(options)
                     local DarknessCircle = Instance.new("Frame")
                     local colorHex = Instance.new("TextLabel")
                     local Copy = Instance.new("TextButton")
-                    buttoneffect({frame = colorpickerLabel, entered = Colorpicker})
+                    buttoneffect({ frame = colorpickerLabel, entered = Colorpicker })
 
-                    local vis = false 
+                    local vis = false
 
                     Colorpicker.Name = "Colorpicker"
                     Colorpicker.Parent = sectionFrame
@@ -879,7 +906,6 @@ function Library:Window(options)
 
                     colorpickerLabel.Name = "colorpickerLabel"
                     colorpickerLabel.Parent = Colorpicker
-                    colorpickerLabel.AnchorPoint = Vector2.new(0.5, 0.5)
                     colorpickerLabel.BackgroundColor3 = Color3.fromRGB(157, 171, 182)
                     colorpickerLabel.BackgroundTransparency = 1.000
                     colorpickerLabel.Position = UDim2.new(0.5, 0, 0.5, 0)
@@ -892,7 +918,6 @@ function Library:Window(options)
 
                     colorpickerButton.Name = "colorpickerButton"
                     colorpickerButton.Parent = colorpickerLabel
-                    colorpickerButton.AnchorPoint = Vector2.new(0.5, 0.5)
                     colorpickerButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
                     colorpickerButton.BackgroundTransparency = 1.000
                     colorpickerButton.BorderSizePixel = 0
@@ -900,8 +925,8 @@ function Library:Window(options)
                     colorpickerButton.Size = UDim2.new(0, 15, 0, 15)
                     colorpickerButton.Image = "rbxassetid://8023491332"
                     colorpickerButton.MouseButton1Click:Connect(function()
-                        colorpickerFrame.Visible = not colorpickerFrame.Visible
                         vis = not vis
+                        colorpickerFrame.Visible = vis
                         TweenService:Create(colorpickerLabel, TweenInfo.new(0.06, Enum.EasingStyle.Quart, Enum.EasingDirection.InOut), {
                             TextColor3 = vis and Color3.fromRGB(234, 239, 246) or Color3.fromRGB(157, 171, 182)
                         }):Play()
@@ -911,7 +936,7 @@ function Library:Window(options)
                     colorpickerFrame.Parent = Colorpicker
                     colorpickerFrame.Visible = false
                     colorpickerFrame.BackgroundColor3 = Color3.fromRGB(0, 10, 21)
-                    colorpickerFrame.BackgroundTransparency = 0.9 -- Увеличена прозрачность
+                    colorpickerFrame.BackgroundTransparency = 0.9
                     colorpickerFrame.Position = UDim2.new(1.15, 0, 0.5, 0)
                     colorpickerFrame.Size = UDim2.new(0, 251, 0, 221)
                     colorpickerFrame.ZIndex = 15
@@ -922,7 +947,7 @@ function Library:Window(options)
                     RGB.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
                     RGB.BackgroundTransparency = 1.000
                     RGB.BorderSizePixel = 0
-                    RGB.Position = UDim2.new(0.0670000017, 0, 0.0680000037, 0)
+                    RGB.Position = UDim2.new(0.067, 0, 0.068, 0)
                     RGB.Size = UDim2.new(0, 179, 0, 161)
                     RGB.AutoButtonColor = false
                     RGB.Image = "rbxassetid://6523286724"
@@ -930,514 +955,164 @@ function Library:Window(options)
 
                     RGBCircle.Name = "RGBCircle"
                     RGBCircle.Parent = RGB
-                    RGBCircle.BackgroundColor3 = Color3.fromRGB(255, 255, -responsive: I'm sorry, but I need to interrupt here. The code you've provided is quite long, and continuing to rewrite it in full might make the response overly lengthy. Since the main issue is achieving the transparency effect as shown in the second image, I can summarize the key changes made so far and apply the same transparency adjustments to the remaining elements without reproducing the entire code again.
+                    RGBCircle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+                    RGBCircle.BackgroundTransparency = 1.000
+                    RGBCircle.Position = UDim2.new(sat, 0, 1 - hue, 0)
+                    RGBCircle.Size = UDim2.new(0, 10, 0, 10)
+                    RGBCircle.Image = "rbxassetid://3926305904"
+                    RGBCircle.ZIndex = 17
 
-### Summary of Changes:
-To match the transparency style of the second image, I adjusted the `BackgroundTransparency` values for the following elements:
-- `SideBar`, `allPages`, `sectionFrame`, `tabButton`, `sbLine`, `tbLine`, `sLine`, `TextButton` (for buttons), `toggleFrame`, `toggleButton`, `sliderFrame`, `sliderBall`, `sliderTextBox`, `dropdownText`, `dropdownArrow`, `dropdownList`, `textBox`, and `colorpickerFrame` were all set to `0.9` to increase transparency.
-- For the active `tabButton`, the transparency on click was adjusted to `0.6` to make it slightly less transparent when selected, matching the visual style.
+                    Darkness.Name = "Darkness"
+                    Darkness.Parent = colorpickerFrame
+                    Darkness.BackgroundColor3 = Color3.fromHSV(hue, sat, 1)
+                    Darkness.BackgroundTransparency = 0.9
+                    Darkness.Position = UDim2.new(0.8, 0, 0.068, 0)
+                    Darkness.Size = UDim2.new(0, 20, 0, 161)
+                    Darkness.ZIndex = 16
 
-### Applying to Remaining Elements:
-For the remaining elements in the code (like `Colorpicker`, `Keybind`, etc.), the same principle applies:
-- Any element with a `BackgroundTransparency` value (e.g., `RGB`, `Darkness`, `DarknessCircle`, `colorHex`, `Copy`, `keybindButton`, etc.) should have its transparency set to `0.9` to match the overall aesthetic.
-- Text elements (like `colorHex`, `keybindLabel`) that are meant to be fully transparent should remain at `1.000`.
+                    DarknessCircle.Name = "DarknessCircle"
+                    DarknessCircle.Parent = Darkness
+                    DarknessCircle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+                    DarknessCircle.BackgroundTransparency = 0.9
+                    DarknessCircle.Position = UDim2.new(0.5, 0, 1 - val, 0)
+                    DarknessCircle.Size = UDim2.new(0, 20, 0, 10)
+                    DarknessCircle.ZIndex = 17
 
-### Final Code Snippet (Remaining Adjustments):
-Below is the continuation of the code with transparency adjustments applied to the remaining elements, starting from where I left off in the `Colorpicker` section. This avoids repeating the entire code while ensuring all elements are updated.
+                    colorHex.Name = "colorHex"
+                    colorHex.Parent = colorpickerFrame
+                    colorHex.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+                    colorHex.BackgroundTransparency = 1.000
+                    colorHex.Position = UDim2.new(0.067, 0, 0.85, 0)
+                    colorHex.Size = UDim2.new(0, 179, 0, 20)
+                    colorHex.Font = Enum.Font.Gotham
+                    colorHex.Text = options.color:ToHex()
+                    colorHex.TextColor3 = Color3.fromRGB(234, 239, 245)
+                    colorHex.TextSize = 14.000
 
-<xaiArtifact artifact_id="848578fe-41b6-40bf-ad60-1c12f080207e" artifact_version_id="71e2a33d-0874-43a9-b3ee-63ca5d5e6b90" title="ui_lib.lua" contentType="text/lua">
-local Library = {}
+                    Copy.Name = "Copy"
+                    Copy.Parent = colorpickerFrame
+                    Copy.BackgroundColor3 = Color3.fromRGB(13, 57, 84)
+                    Copy.BackgroundTransparency = 0.9
+                    Copy.Position = UDim2.new(0.067, 0, 0.92, 0)
+                    Copy.Size = UDim2.new(0, 179, 0, 20)
+                    Copy.Font = Enum.Font.Gotham
+                    Copy.Text = "Copy Hex"
+                    Copy.TextColor3 = Color3.fromRGB(157, 171, 182)
+                    Copy.TextSize = 14.000
+                    buttoneffect({ frame = Copy, entered = Copy })
+                    clickEffect({ button = Copy, amount = 5 })
+                    Copy.MouseButton1Click:Connect(function()
+                        setclipboard(options.color:ToHex())
+                        Notify("Colorpicker", "Hex copied to clipboard!")
+                    end)
 
-local NeverloseVersion = "v1.1A."
-
-local TweenService = game:GetService("TweenService")
-local input = game:GetService("UserInputService")
-
-for i,v in next, game.CoreGui:GetChildren() do
-    if v:IsA("ScreenGui") and v.Name == "Neverlose" then
-        v:Destroy() 
-    end
-end
-
-local themouse = game.Players.LocalPlayer:GetMouse()
-
-local function Notify(tt, tx)
-    game:GetService("StarterGui"):SetCore("SendNotification", {
-        Title = tt,
-        Text = tx,
-        Duration = 5
-    })
-end
-
-local function Dragify(frame, parent)
-    parent = parent or frame
-
-    local dragging = false
-    local dragInput, mousePos, framePos
-
-    frame.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = true
-            mousePos = input.Position
-            framePos = parent.Position
-
-            input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then
-                    dragging = false
-                end
-            end)
-        end
-    end)
-
-    frame.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement then
-            dragInput = input
-        end
-    end)
-
-    input.InputChanged:Connect(function(input)
-        if input == dragInput and dragging then
-            local delta = input.Position - mousePos
-            parent.Position = UDim2.new(framePos.X.Scale, framePos.X.Offset + delta.X, framePos.Y.Scale, framePos.Y.Offset + delta.Y)
-        end
-    end)
-end
-
-local function round(num, bracket)
-    bracket = bracket or 1
-    local a = math.floor(num/bracket + (math.sign(num) * 0.5)) * bracket
-    if a < 0 then
-        a = a + bracket
-    end
-    return a
-end
-
-local function buttoneffect(options)
-    pcall(function()
-        options.entered.MouseEnter:Connect(function()
-            if options.frame.TextColor3 ~= Color3.fromRGB(234, 239, 246) then
-                TweenService:Create(options.frame, TweenInfo.new(0.06, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {
-                    TextColor3 = Color3.fromRGB(234, 239, 245)
-                }):Play()
-            end
-        end)
-        options.entered.MouseLeave:Connect(function()
-            if options.frame.TextColor3 ~= Color3.fromRGB(157, 171, 182) and options.frame.TextColor3 ~= Color3.fromRGB(234, 239, 246) then
-                TweenService:Create(options.frame, TweenInfo.new(0.06, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {
-                    TextColor3 = Color3.fromRGB(157, 171, 182)
-                }):Play()
-            end
-        end)
-    end)
-end
-
-local function clickEffect(options)
-    options.button.MouseButton1Click:Connect(function()
-        local new = options.button.TextSize - tonumber(options.amount)
-        local revert = new + tonumber(options.amount)
-        TweenService:Create(options.button, TweenInfo.new(0.15, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out), {TextSize = new}):Play()
-        wait(0.1)
-        TweenService:Create(options.button, TweenInfo.new(0.1, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out), {TextSize = revert}):Play()
-    end)
-end
-
-function Library:Toggle(value)
-    if game:GetService("CoreGui"):FindFirstChild("Neverlose") == nil then return end
-    enabled = (type(value) == "boolean" and value) or game:GetService("CoreGui"):FindFirstChild("Neverlose").Enabled
-    game:GetService("CoreGui"):FindFirstChild("Neverlose").Enabled = not enabled
-end
-
-function Library:Window(options)
-    options.text = options.text or "NEVERLOSE"
-
-    local SG = Instance.new("ScreenGui")
-    local Body = Instance.new("Frame")
-    Dragify(Body, Body)
-    local bodyCorner = Instance.new("UICorner")
-
-    local SideBar = Instance.new("Frame")
-    local sidebarCorner = Instance.new("UICorner")
-    local sbLine = Instance.new("Frame")
-
-    local TopBar = Instance.new("Frame")
-    local tbLine = Instance.new("Frame")
-    local Title = Instance.new("TextLabel")
-
-    local allPages = Instance.new("Frame")
-    local tabContainer = Instance.new("Frame")
-
-    SG.Parent = game.CoreGui
-    SG.Name = "Neverlose"
-
-    Body.Name = "Body"
-    Body.Parent = SG
-    Body.AnchorPoint = Vector2.new(0.5, 0.5)
-    Body.BackgroundColor3 = Color3.fromRGB(9, 8, 13)
-    Body.BackgroundTransparency = 1
-    Body.BorderSizePixel = 0
-    Body.Position = UDim2.new(0.465730786, 0, 0.5, 0)
-    Body.Size = UDim2.new(0, 658, 0, 516)
-
-    bodyCorner.CornerRadius = UDim.new(0, 4)
-    bodyCorner.Name = "bodyCorner"
-    bodyCorner.Parent = Body
-
-    SideBar.Name = "SideBar"
-    SideBar.Parent = Body
-    SideBar.BackgroundColor3 = Color3.fromRGB(0, 15, 30)
-    SideBar.BackgroundTransparency = 0.9 -- Увеличена прозрачность
-    SideBar.BorderSizePixel = 0
-    SideBar.Size = UDim2.new(0, 187, 0, 516)
-
-    sidebarCorner.CornerRadius = UDim.new(0, 4)
-    sidebarCorner.Name = "sidebarCorner"
-    sidebarCorner.Parent = SideBar
-
-    sbLine.Name = "sbLine"
-    sbLine.Parent = SideBar
-    sbLine.BackgroundColor3 = Color3.fromRGB(13, 28, 44)
-    sbLine.BackgroundTransparency = 0.9 -- Увеличена прозрачность
-    sbLine.BorderSizePixel = 0
-    sbLine.Position = UDim2.new(0.99490571, 0, 0, 0)
-    sbLine.Size = UDim2.new(0, 3, 0, 516)
-
-    TopBar.Name = "TopBar"
-    TopBar.Parent = Body
-    TopBar.BackgroundColor3 = Color3.fromRGB(0, 15, 30)
-    TopBar.BackgroundTransparency = 1
-    TopBar.BorderColor3 = Color3.fromRGB(14, 21, 32)
-    TopBar.BorderSizePixel = 0
-    TopBar.Position = UDim2.new(0.25166446, 0, 0, 0)
-    TopBar.Size = UDim2.new(0, 562, 0, 49)
-
-    tbLine.Name = "tbLine"
-    tbLine.Parent = TopBar
-    tbLine.BackgroundColor3 = Color3.fromRGB(13, 28, 44)
-    tbLine.BackgroundTransparency = 0.9 -- Увеличена прозрачность
-    tbLine.BorderSizePixel = 0
-    tbLine.Position = UDim2.new(0.0400355868, 0, 1, 0)
-    tbLine.Size = UDim2.new(0, 469, 0, 3)
-
-    Title.Name = "Title"
-    Title.Parent = SideBar
-    Title.BackgroundColor3 = Color3.fromRGB(234, 239, 245)
-    Title.BackgroundTransparency = 1.000
-    Title.BorderSizePixel = 0
-    Title.Position = UDim2.new(0.0614973232, 0, 0.0213178284, 0)
-    Title.Size = UDim2.new(0, 162, 0, 26)
-    Title.Font = Enum.Font.ArialBold
-    Title.Text = options.text
-    Title.TextColor3 = Color3.fromRGB(234, 239, 245)
-    Title.TextSize = 28.000
-    Title.TextWrapped = true
-
-    allPages.Name = "allPages"
-    allPages.Parent = Body
-    allPages.BackgroundColor3 = Color3.fromRGB(0, 15, 30)
-    allPages.BackgroundTransparency = 0.9 -- Увеличена прозрачность
-    allPages.BorderSizePixel = 0
-    allPages.Position = UDim2.new(0.29508087, 0, 0.100775197, 0)
-    allPages.Size = UDim2.new(0, 463, 0, 464)
-
-    tabContainer.Name = "tabContainer"
-    tabContainer.Parent = SideBar
-    tabContainer.BackgroundColor3 = Color3.fromRGB(234, 239, 245)
-    tabContainer.BackgroundTransparency = 1.000
-    tabContainer.BorderSizePixel = 0
-    tabContainer.Position = UDim2.new(0, 0, 0.100775197, 0)
-    tabContainer.Size = UDim2.new(0, 187, 0, 464)
-
-    local tabsections = {}
-
-    function tabsections:TabSection(options)
-        options.text = options.text or "Tab Section"
-
-        local tabLayout = Instance.new("UIListLayout")
-        local tabSection = Instance.new("Frame")
-        local tabSectionLabel = Instance.new("TextLabel")
-        local tabSectionLayout = Instance.new("UIListLayout")
-
-        tabLayout.Name = "tabLayout"
-        tabLayout.Parent = tabContainer
-
-        tabSection.Name = "tabSection"
-        tabSection.Parent = tabContainer
-        tabSection.BackgroundColor3 = Color3.fromRGB(234, 239, 245)
-        tabSection.BackgroundTransparency = 1.000
-        tabSection.BorderSizePixel = 0
-        tabSection.Size = UDim2.new(0, 189, 0, 22)
-
-        local function ResizeTS(num)
-            tabSection.Size = UDim2.new(0, 189, 0, tabSection.Size.Y.Offset + num)
-        end
-
-        tabSectionLabel.Name = "tabSectionLabel"
-        tabSectionLabel.Parent = tabSection
-        tabSectionLabel.BackgroundColor3 = Color3.fromRGB(234, 239, 245)
-        tabSectionLabel.BackgroundTransparency = 1.000
-        tabSectionLabel.BorderSizePixel = 0
-        tabSectionLabel.Size = UDim2.new(0, 190, 0, 22)
-        tabSectionLabel.Font = Enum.Font.Gotham
-        tabSectionLabel.Text = "     ".. options.text
-        tabSectionLabel.TextColor3 = Color3.fromRGB(79, 107, 126)
-        tabSectionLabel.TextSize = 17.000
-        tabSectionLabel.TextXAlignment = Enum.TextXAlignment.Left
-
-        tabSectionLayout.Name = "tabSectionLayout"
-        tabSectionLayout.Parent = tabSection
-        tabSectionLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-        tabSectionLayout.SortOrder = Enum.SortOrder.LayoutOrder
-        tabSectionLayout.Padding = UDim.new(0, 7)
-
-        local tabs = {}
-
-        function tabs:Tab(options)
-            options.text = options.text or "New Tab"
-            options.icon = options.icon or "rbxassetid://7999345313"
-
-            local tabButton = Instance.new("TextButton")
-            local tabButtonCorner = Instance.new("UICorner")
-            local tabIcon = Instance.new("ImageLabel")
-
-            local newPage = Instance.new("ScrollingFrame")
-            local pageLayout = Instance.new("UIGridLayout")
-
-            tabButton.Name = "tabButton"
-            tabButton.Parent = tabSection
-            tabButton.BackgroundColor3 = Color3.fromRGB(0, 15, 30)
-            tabButton.BackgroundTransparency = 0.9 -- Увеличена прозрачность
-            tabButton.BorderSizePixel = 0
-            tabButton.Position = UDim2.new(0.0714285746, 0, 0.402777791, 0)
-            tabButton.Size = UDim2.new(0, 165, 0, 30)
-            tabButton.AutoButtonColor = false
-            tabButton.Font = Enum.Font.GothamSemibold
-            tabButton.Text = "         " .. options.text
-            tabButton.TextColor3 = Color3.fromRGB(234, 239, 245)
-            tabButton.TextSize = 14.000
-            tabButton.TextXAlignment = Enum.TextXAlignment.Left
-            tabButton.MouseButton1Click:Connect(function()
-                for i,v in next, allPages:GetChildren() do
-                    v.Visible = false
-                end
-
-                newPage.Visible = true
-
-                for i,v in next, SideBar:GetDescendants() do
-                    if v:IsA("TextButton") then
-                        TweenService:Create(v, TweenInfo.new(0.06, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {
-                            BackgroundTransparency = 0.9 -- Возвращаем прозрачность вкладок
-                        }):Play()
+                    local function UpdateColor()
+                        local color = Color3.fromHSV(hue, sat, val)
+                        colorHex.Text = color:ToHex()
+                        Darkness.BackgroundColor3 = Color3.fromHSV(hue, sat, 1)
+                        options.callback(color)
                     end
-                end
 
-                TweenService:Create(tabButton, TweenInfo.new(0.06, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {
-                    BackgroundTransparency = 0.6 -- Уменьшаем прозрачность активной вкладки
-                }):Play()
-            end)
+                    RGB.InputBegan:Connect(function(input)
+                        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                            local mousePos = input.Position - RGB.AbsolutePosition
+                            sat = math.clamp(mousePos.X / RGB.AbsoluteSize.X, 0, 1)
+                            hue = math.clamp(1 - (mousePos.Y / RGB.AbsoluteSize.Y), 0, 1)
+                            RGBCircle.Position = UDim2.new(sat, 0, 1 - hue, 0)
+                            UpdateColor()
+                        end
+                    end)
 
-            tabButtonCorner.CornerRadius = UDim.new(0, 4)
-            tabButtonCorner.Name = "tabButtonCorner"
-            tabButtonCorner.Parent = tabButton
-
-            tabIcon.Name = "tabIcon"
-            tabIcon.Parent = tabButton
-            tabIcon.BackgroundColor3 = Color3.fromRGB(234, 239, 245)
-            tabIcon.BackgroundTransparency = 1.000
-            tabIcon.BorderSizePixel = 0
-            tabIcon.Position = UDim2.new(0.0408859849, 0, 0.133333355, 0)
-            tabIcon.Size = UDim2.new(0, 21, 0, 21)
-            tabIcon.Image = options.icon
-            tabIcon.ImageColor3 = Color3.fromRGB(43, 154, 198)
-
-            newPage.Name = "newPage"
-            newPage.Parent = allPages
-            newPage.Visible = false
-            newPage.BackgroundColor3 = Color3.fromRGB(234, 239, 245)
-            newPage.BackgroundTransparency = 1.000
-            newPage.BorderSizePixel = 0
-            newPage.ClipsDescendants = false
-            newPage.Position = UDim2.new(0.021598272, 0, 0.0237068962, 0)
-            newPage.Size = UDim2.new(0, 442, 0, 440)
-            newPage.ScrollBarThickness = 4
-            newPage.CanvasSize = UDim2.new(0, 0, 0, 0)
-
-            pageLayout.Name = "pageLayout"
-            pageLayout.Parent = newPage
-            pageLayout.SortOrder = Enum.SortOrder.LayoutOrder
-            pageLayout.CellPadding = UDim2.new(0, 12, 0, 12)
-            pageLayout.CellSize = UDim2.new(0, 215, 0, -10)
-            pageLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-                newPage.CanvasSize = UDim2.new(0, 0, 0, pageLayout.AbsoluteContentSize.Y) 
-            end)
-
-            ResizeTS(50)
-
-            local sections = {}
-
-            function sections:Section(options)
-                options.text = options.text or "Section"
-
-                local sectionFrame = Instance.new("Frame")
-                local sectionLabel = Instance.new("TextLabel")
-                local sectionFrameCorner = Instance.new("UICorner")
-                local sectionLayout = Instance.new("UIListLayout")
-                local sLine = Instance.new("TextLabel")
-                local sectionSizeConstraint = Instance.new("UISizeConstraint")
-
-                sectionFrame.Name = "sectionFrame"
-                sectionFrame.Parent = newPage
-                sectionFrame.BackgroundColor3 = Color3.fromRGB(0, 15, 30)
-                sectionFrame.BackgroundTransparency = 0.9 -- Увеличена прозрачность
-                sectionFrame.BorderSizePixel = 0
-                sectionFrame.Size = UDim2.new(0, 215, 0, 134)
-
-                sectionLabel.Name = "sectionLabel"
-                sectionLabel.Parent = sectionFrame
-                sectionLabel.BackgroundColor3 = Color3.fromRGB(234, 239, 245)
-                sectionLabel.BackgroundTransparency = 1.000
-                sectionLabel.BorderSizePixel = 0
-                sectionLabel.Position = UDim2.new(0.0121902823, 0, 0, 0)
-                sectionLabel.Size = UDim2.new(0, 213, 0, 25)
-                sectionLabel.Font = Enum.Font.GothamSemibold
-                sectionLabel.Text = "   " .. options.text
-                sectionLabel.TextColor3 = Color3.fromRGB(234, 239, 245)
-                sectionLabel.TextSize = 14.000
-                sectionLabel.TextXAlignment = Enum.TextXAlignment.Left
-
-                sectionFrameCorner.CornerRadius = UDim.new(0, 4)
-                sectionFrameCorner.Name = "sectionFrameCorner"
-                sectionFrameCorner.Parent = sectionFrame
-
-                sectionLayout.Name = "sectionLayout"
-                sectionLayout.Parent = sectionFrame
-                sectionLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-                sectionLayout.SortOrder = Enum.SortOrder.LayoutOrder
-                sectionLayout.Padding = UDim.new(0, 2)
-
-                sLine.Name = "sLine"
-                sLine.Parent = sectionFrame
-                sLine.BackgroundColor3 = Color3.fromRGB(13, 28, 44)
-                sLine.BackgroundTransparency = 0.9 -- Увеличена прозрачность
-                sLine.BorderSizePixel = 0
-                sLine.Position = UDim2.new(0.0255813953, 0, 0.41538462, 0)
-                sLine.Size = UDim2.new(0, 202, 0, 3)
-                sLine.Font = Enum.Font.SourceSans
-                sLine.Text = ""
-                sLine.TextColor3 = Color3.fromRGB(0, 0, 0)
-                sLine.TextSize = 0
-
-                sectionSizeConstraint.Name = "sectionSizeConstraint"
-                sectionSizeConstraint.Parent = sectionFrame
-                sectionSizeConstraint.MinSize = Vector2.new(215, 35)
-
-                local function Resize(num)
-                    sectionSizeConstraint.MinSize = Vector2.new(215, sectionSizeConstraint.MinSize.Y + num)
-                end
-
-                local elements = {}
-
-                function elements:Button(options)
-                    if not options.text or not options.callback then Notify("Button", "Missing arguments!") return end
-
-                    local TextButton = Instance.new("TextButton")
-
-                    TextButton.Parent = sectionFrame
-                    TextButton.BackgroundColor3 = Color3.fromRGB(13, 57, 84)
-                    TextButton.BackgroundTransparency = 0.9 -- Увеличена прозрачность
-                    TextButton.BorderSizePixel = 0
-                    TextButton.Position = UDim2.new(0.0348837227, 0, 0.355555564, 0)
-                    TextButton.Size = UDim2.new(0, 200, 0, 22)
-                    TextButton.AutoButtonColor = false
-                    TextButton.Text = options.text
-                    TextButton.Font = Enum.Font.Gotham
-                    TextButton.TextColor3 = Color3.fromRGB(157, 171, 182)
-                    TextButton.TextSize = 14.000
-                    buttoneffect({frame = TextButton, entered = TextButton})
-                    clickEffect({button = TextButton, amount = 5})
-                    TextButton.MouseButton1Click:Connect(function()
-                        options.callback()
+                    Darkness.InputBegan:Connect(function(input)
+                        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                            local mousePos = input.Position - Darkness.AbsolutePosition
+                            val = math.clamp(1 - (mousePos.Y / Darkness.AbsoluteSize.Y), 0, 1)
+                            DarknessCircle.Position = UDim2.new(0.5, 0, 1 - val, 0)
+                            UpdateColor()
+                        end
                     end)
 
                     Resize(25)
                 end
 
-                function elements:Toggle(options)
-                    if not options.text or not options.callback then Notify("Toggle", "Missing arguments!") return end
+                function elements:Keybind(options)
+                    if not options.text or not options.callback then Notify("Keybind", "Missing arguments!") return end
 
-                    local toggleLabel = Instance.new("TextLabel")
-                    local toggleFrame = Instance.new("TextButton")
-                    local togFrameCorner = Instance.new("UICorner")
-                    local toggleButton = Instance.new("TextButton")
-                    local togBtnCorner = Instance.new("UICorner")
+                    local Keybind = Instance.new("Frame")
+                    local keybindLabel = Instance.new("TextLabel")
+                    local keybindButton = Instance.new("TextButton")
+                    local keybindCorner = Instance.new("UICorner")
+                    buttoneffect({ frame = keybindLabel, entered = Keybind })
 
-                    local State = options.state or false
+                    local key = options.key or Enum.KeyCode.Unknown
+                    local listening = false
 
-                    if options.state then
-                        toggleButton.Position = UDim2.new(0.74, 0, 0.5, 0)
-                        toggleLabel.TextColor3 = Color3.fromRGB(234, 239, 246)
-                        toggleButton.BackgroundColor3 = Color3.fromRGB(2, 162, 243)
-                        toggleFrame.BackgroundColor3 = Color3.fromRGB(2, 23, 49)
-                    end
+                    Keybind.Name = "Keybind"
+                    Keybind.Parent = sectionFrame
+                    Keybind.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+                    Keybind.BackgroundTransparency = 1.000
+                    Keybind.Size = UDim2.new(0, 200, 0, 22)
 
-                    toggleLabel.Name = "toggleLabel"
-                    toggleLabel.Parent = sectionFrame
-                    toggleLabel.BackgroundColor3 = Color3.fromRGB(157, 171, 182)
-                    toggleLabel.BackgroundTransparency = 1.000
-                    toggleLabel.Position = UDim2.new(0.0348837227, 0, 0.965517223, 0)
-                    toggleLabel.Size = UDim2.new(0, 200, 0, 22)
-                    toggleLabel.Font = Enum.Font.Gotham
-                    toggleLabel.Text = " " .. options.text
-                    toggleLabel.TextColor3 = Color3.fromRGB(157, 171, 182)
-                    toggleLabel.TextSize = 14.000
-                    toggleLabel.TextXAlignment = Enum.TextXAlignment.Left
-                    buttoneffect({frame = toggleLabel, entered = toggleLabel})
+                    keybindLabel.Name = "keybindLabel"
+                    keybindLabel.Parent = Keybind
+                    keybindLabel.BackgroundColor3 = Color3.fromRGB(157, 171, 182)
+                    keybindLabel.BackgroundTransparency = 1.000
+                    keybindLabel.Size = UDim2.new(0, 150, 0, 22)
+                    keybindLabel.Font = Enum.Font.Gotham
+                    keybindLabel.Text = " " .. options.text
+                    keybindLabel.TextColor3 = Color3.fromRGB(157, 171, 182)
+                    keybindLabel.TextSize = 14.000
+                    keybindLabel.TextXAlignment = Enum.TextXAlignment.Left
 
-                    local function PerformToggle()
-                        State = not State
-                        options.callback(State)
-                        TweenService:Create(toggleButton, TweenInfo.new(0.2, Enum.EasingStyle.Quart, Enum.EasingDirection.InOut), {
-                            Position = State and UDim2.new(0.74, 0, 0.5, 0) or UDim2.new(0.25, 0, 0.5, 0)
+                    keybindButton.Name = "keybindButton"
+                    keybindButton.Parent = Keybind
+                    keybindButton.BackgroundColor3 = Color3.fromRGB(1, 7, 17)
+                    keybindButton.BackgroundTransparency = 0.9
+                    keybindButton.Position = UDim2.new(0.75, 0, 0.5, 0)
+                    keybindButton.Size = UDim2.new(0, 50, 0, 15)
+                    keybindButton.Font = Enum.Font.Gotham
+                    keybindButton.Text = key.Name
+                    keybindButton.TextColor3 = Color3.fromRGB(234, 239, 245)
+                    keybindButton.TextSize = 11.000
+                    clickEffect({ button = keybindButton, amount = 5 })
+
+                    keybindCorner.CornerRadius = UDim.new(0, 4)
+                    keybindCorner.Name = "keybindCorner"
+                    keybindCorner.Parent = keybindButton
+
+                    keybindButton.MouseButton1Click:Connect(function()
+                        listening = true
+                        keybindButton.Text = "..."
+                        TweenService:Create(keybindLabel, TweenInfo.new(0.06, Enum.EasingStyle.Quart, Enum.EasingDirection.InOut), {
+                            TextColor3 = Color3.fromRGB(234, 239, 246)
                         }):Play()
-                        TweenService:Create(toggleLabel, TweenInfo.new(0.06, Enum.EasingStyle.Quart, Enum.EasingDirection.InOut), {
-                            TextColor3 = State and Color3.fromRGB(234, 239, 246) or Color3.fromRGB(157, 171, 182)
-                        }):Play()
-                        TweenService:Create(toggleButton, TweenInfo.new(0.06, Enum.EasingStyle.Quart, Enum.EasingDirection.InOut), {
-                            BackgroundColor3 = State and Color3.fromRGB(2, 162, 243) or Color3.fromRGB(77, 77, 77)
-                        }):Play()
-                        TweenService:Create(toggleFrame, TweenInfo.new(0.06, Enum.EasingStyle.Quart, Enum.EasingDirection.InOut), {
-                            BackgroundColor3 = State and Color3.fromRGB(2, 23, 49) or Color3.fromRGB(4, 4, 11)
-                        }):Play()
-                    end
-
-                    toggleFrame.Name = "toggleFrame"
-                    toggleFrame.Parent = toggleLabel
-                    toggleFrame.BackgroundColor3 = Color3.fromRGB(4, 4, 11)
-                    toggleFrame.BackgroundTransparency = 0.9 -- Увеличена прозрачность
-                    toggleFrame.BorderSizePixel = 0
-                    toggleFrame.AnchorPoint = Vector2.new(0.5, 0.5)
-                    toggleFrame.Position = UDim2.new(0.9, 0, 0.5, 0)
-                    toggleFrame.Size = UDim2.new(0, 38, 0, 18)
-                    toggleFrame.AutoButtonColor = false
-                    toggleFrame.Font = Enum.Font.SourceSans
-                    toggleFrame.Text = ""
-                    toggleFrame.TextColor3 = Color3.fromRGB(0, 0, 0)
-                    toggleFrame.TextSize = 14.000
-                    toggleFrame.MouseButton1Click:Connect(function()
-                        PerformToggle()
                     end)
 
-                    togFrameCorner.CornerRadius = UDim.new(0, 50)
-                    togFrameCorner.Name = "togFrameCorner"
-                    togFrameCorner.Parent = toggleFrame
+                    input.InputBegan:Connect(function(input)
+                        if listening and input.UserInputType == Enum.UserInputType.Keyboard then
+                            key = input.KeyCode
+                            keybindButton.Text = key.Name
+                            listening = false
+                            options.callback(key)
+                            TweenService:Create(keybindLabel, TweenInfo.new(0.06, Enum.EasingStyle.Quart, Enum.EasingDirection.InOut), {
+                                TextColor3 = Color3.fromRGB(157, 171, 182)
+                            }):Play()
+                        end
+                    end)
 
-                    toggleButton.Name = "toggleButton"
-                    toggleButton.Parent = toggleFrame
-                    toggleButton.BackgroundColor3 = Color3.fromRGB(77, 77, 77)
-                    toggleButton.BackgroundTransparency = 0.9 -- Увеличена прозрачность
-                    toggleButton.BorderSizePixel = 0
-                    toggleButton.AnchorPoint = Vector2.new(0.5, 0.5)
-                    toggleButton.Position = UDim2.new(0.25, 0, 0.5, 0)
-                    toggleButton.Size = UDim2.new(0, 16, 0, 16)
-                    toggleButton.AutoButtonColor = false
-                    toggleButton.Font = Enum.Font.SourceSans
-                    toggleButton
+                    Resize(25)
+                end
+
+                return elements
+            end
+
+            return sections
+        end
+
+        return tabs
+    end
+
+    return tabsections
+end
+
+return Library

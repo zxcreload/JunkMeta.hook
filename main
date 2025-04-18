@@ -2,7 +2,7 @@ local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/zxcre
 
 -- Create the main window with specified size
 local Window = Library:Window({
-	Size = UDim2.new(0, 600, 0, 650)
+    Size = UDim2.new(0, 600, 0, 650)
 })
 
 -- Set the background color to white
@@ -22,7 +22,7 @@ local CombatSection = CombatPage:Section({
     Side = "Left"
 })
 
--- Optimized Silent Aimbot Code
+-- Optimized Silent Aimbot Code with Targetstrafe
 local function SetupSilentAimbot()
     -- SETTINGS
     local keybind = Enum.KeyCode.C
@@ -33,14 +33,31 @@ local function SetupSilentAimbot()
     local tracerColor = Color3.fromRGB(255, 50, 50)
     local tracerThickness = 1.5
     local tracerTransparency = 0.7
-	local initialOpacity = math.floor(100 * (1 - tracerTransparency))
+    local initialOpacity = math.floor(100 * (1 - tracerTransparency))
     local aimbotEnabled = false
     local visualizerEnabled = false
+
+    -- Targetstrafe Settings
+    local targetStrafeEnabled = false
+    local strafeMode = "Custom"
+    local strafeSpeed = 50 -- 1-100, где 1 = медленный, 100 = быстрый
+    local strafeRadius = 10 -- Радиус круга (5-20 студов)
+    local upwoakeHeight = 5 -- Высота полусферы для Upwoake (0-10 студов)
+    local ghostColor = Color3.fromRGB(0, 170, 255)
+    local ghostTransparency = 0.1
 
     -- SERVICES
     local uis, plrs, rs, run = game:GetService("UserInputService"), game:GetService("Players"), game:GetService("ReplicatedStorage"), game:GetService("RunService")
     local lp, cam, mouse = plrs.LocalPlayer, workspace.CurrentCamera, plrs.LocalPlayer:GetMouse()
     local char, target, tracer, lastPos, lastTime = lp.Character, nil, nil, nil, nil
+
+    -- Targetstrafe Variables
+    local followPart = nil
+    local ghostModel = nil
+    local strafeAngle = 0
+    local upwoakeYOffset = 0
+    local upwoakeYDirection = 1
+    local teleportConnection = nil
 
     -- Create Tracer
     local function createTracer()
@@ -108,6 +125,192 @@ local function SetupSilentAimbot()
         return closest
     end
 
+    -- Create FollowPart for Targetstrafe
+    local function createFollowPart()
+        local part = Instance.new("Part")
+        part.Name = "FollowPart"
+        part.Anchored = true
+        part.CanCollide = false
+        part.Transparency = 1
+        part.Size = Vector3.new(0.1, 0.1, 0.1)
+        part.Parent = workspace
+        return part
+    end
+
+    -- Create Ghost Model for Targetstrafe
+    local function createGhost()
+        local model = Instance.new("Model")
+        model.Name = "GhostModel"
+        model.Parent = workspace
+
+        local torso = Instance.new("Part")
+        torso.Name = "Torso"
+        torso.Size = Vector3.new(2, 2, 1)
+        torso.Anchored = true
+        torso.CanCollide = false
+        torso.Transparency = ghostTransparency
+        torso.Color = ghostColor
+        torso.Material = Enum.Material.ForceField
+        torso.Parent = model
+
+        local head = Instance.new("Part")
+        head.Name = "Head"
+        head.Size = Vector3.new(1, 1, 1)
+        head.Position = torso.Position + Vector3.new(0, 1.5, 0)
+        head.Anchored = true
+        head.CanCollide = false
+        head.Transparency = ghostTransparency
+        head.Color = ghostColor
+        head.Material = Enum.Material.ForceField
+        head.Parent = model
+
+        local limbs = {
+            {Name = "LeftArm", Offset = Vector3.new(-1.5, 0, 0)},
+            {Name = "RightArm", Offset = Vector3.new(1.5, 0, 0)},
+            {Name = "LeftLeg", Offset = Vector3.new(-0.5, -2, 0)},
+            {Name = "RightLeg", Offset = Vector3.new(0.5, -2, 0)}
+        }
+
+        for _, limb in ipairs(limbs) do
+            local part = Instance.new("Part")
+            part.Name = limb.Name
+            part.Size = Vector3.new(1, 2, 1)
+            part.Position = torso.Position + limb.Offset
+            part.Anchored = true
+            part.CanCollide = false
+            part.Transparency = ghostTransparency
+            part.Color = ghostColor
+            part.Material = Enum.Material.ForceField
+            part.Parent = model
+        end
+
+        model.PrimaryPart = torso
+
+        local highlight = Instance.new("Highlight")
+        highlight.FillTransparency = 0.8
+        highlight.OutlineTransparency = 0
+        highlight.FillColor = ghostColor
+        highlight.OutlineColor = Color3.fromRGB(0, 255, 255)
+        highlight.Parent = model
+
+        return model
+    end
+
+    -- Setup Character for Targetstrafe
+    local function setupChar(c)
+        char = c
+        if targetStrafeEnabled and target then
+            if followPart then followPart:Destroy() end
+            if ghostModel then ghostModel:Destroy() end
+            followPart = createFollowPart()
+            ghostModel = createGhost()
+        end
+
+        c.ChildAdded:Connect(function(tool)
+            if tool:IsA("Tool") then
+                tool.Activated:Connect(function()
+                    if aimbotEnabled and target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") and target.Character:FindFirstChild("Humanoid") then
+                        local tRoot, tHum = target.Character.HumanoidRootPart, target.Character.Humanoid
+                        if rs:FindFirstChild("MainEvent") then
+                            rs.MainEvent:FireServer("UpdateMousePos", predictPos(tRoot, tHum))
+                        end
+                    end
+                end)
+            end
+        end)
+    end
+
+    -- Targetstrafe Desync Function
+    local function TpToPos(deltaTime)
+        if not targetStrafeEnabled or not target or not char or not char:FindFirstChild("HumanoidRootPart") or not char:FindFirstChild("Humanoid") or not cam or not followPart or not ghostModel then
+            return
+        end
+
+        local hrp = char.HumanoidRootPart
+        local originalCFrame = hrp.CFrame
+        local targetHRP = target.Character and target.Character:FindFirstChild("HumanoidRootPart")
+        local newCFrame
+
+        if targetHRP then
+            local speed = strafeSpeed / 10 -- Нормализация скорости (0.1-10 радиан/сек)
+            strafeAngle = strafeAngle + (speed * deltaTime)
+
+            if strafeMode == "Custom" then
+                local offsetX = math.cos(strafeAngle) * strafeRadius
+                local offsetZ = math.sin(strafeAngle) * strafeRadius
+                local position = targetHRP.Position + Vector3.new(offsetX, 0, offsetZ)
+                newCFrame = CFrame.new(position, targetHRP.Position)
+
+            elseif strafeMode == "Random" then
+                local randomAngle = math.random() * 2 * math.pi
+                local randomDistance = math.random(strafeRadius / 2, strafeRadius)
+                local offsetX = math.cos(randomAngle) * randomDistance
+                local offsetZ = math.sin(randomAngle) * randomDistance
+                local position = targetHRP.Position + Vector3.new(offsetX, 0, offsetZ)
+                newCFrame = CFrame.new(position, targetHRP.Position)
+
+            elseif strafeMode == "Upwoake" then
+                upwoakeYOffset = upwoakeYOffset + (speed * deltaTime * upwoakeYDirection)
+                if upwoakeYOffset > upwoakeHeight then
+                    upwoakeYOffset = upwoakeHeight
+                    upwoakeYDirection = -1
+                elseif upwoakeYOffset < 0 then
+                    upwoakeYOffset = 0
+                    upwoakeYDirection = 1
+                end
+
+                local radius = strafeRadius * math.sqrt(1 - (upwoakeYOffset/upwoakeHeight)^2)
+                local offsetX = math.cos(strafeAngle) * radius
+                local offsetZ = math.sin(strafeAngle) * radius
+                local position = targetHRP.Position + Vector3.new(offsetX, upwoakeYOffset, offsetZ)
+                newCFrame = CFrame.new(position, targetHRP.Position)
+            end
+        else
+            newCFrame = originalCFrame + Vector3.new(math.random(-10, 10), 0, math.random(-10, 10))
+        end
+
+        followPart.CFrame = originalCFrame + Vector3.new(0, 1.5, 0)
+        cam.CameraSubject = followPart
+
+        if ghostModel and ghostModel.PrimaryPart then
+            ghostModel:SetPrimaryPartCFrame(newCFrame)
+            hrp.CFrame = newCFrame
+            run.RenderStepped:Wait()
+            hrp.CFrame = originalCFrame
+        end
+
+        cam.CameraSubject = char.Humanoid
+    end
+
+    -- Toggle Targetstrafe
+    local function ToggleTargetStrafe(enabled)
+        targetStrafeEnabled = enabled
+        if enabled and target and aimbotEnabled then
+            if not teleportConnection then
+                followPart = createFollowPart()
+                ghostModel = createGhost()
+                teleportConnection = run.Heartbeat:Connect(function(deltaTime)
+                    if char and char:FindFirstChild("HumanoidRootPart") and char.HumanoidRootPart.Velocity.Magnitude > 0 then
+                        TpToPos(deltaTime)
+                    end
+                end)
+            end
+        else
+            if teleportConnection then
+                teleportConnection:Disconnect()
+                teleportConnection = nil
+            end
+            if followPart then
+                followPart:Destroy()
+                followPart = nil
+            end
+            if ghostModel then
+                ghostModel:Destroy()
+                ghostModel = nil
+            end
+        end
+    end
+
     -- Handle Input
     local function handleInput(input, gpe)
         if gpe or not aimbotEnabled then return end
@@ -115,41 +318,34 @@ local function SetupSilentAimbot()
             if not target then
                 target = getClosest()
                 if target then
-                    warn("Locked on to: " .. target.Name)
+                    Library:Notification("Locked on to: " .. target.Name, 2, Color3.fromRGB(0, 255, 0))
                     createTracer()
+                    if targetStrafeEnabled then
+                        ToggleTargetStrafe(true)
+                    end
                 else
-                    warn("No target found")
+                    Library:Notification("No target found", 2, Color3.fromRGB(255, 0, 0))
                 end
             else
-                warn("Unlocked from: " .. target.Name)
+                Library:Notification("Unlocked from: " .. target.Name, 2, Color3.fromRGB(255, 0, 0))
                 target, lastPos, lastTime = nil, nil, nil
                 if tracer then tracer.Visible = false end
+                ToggleTargetStrafe(false)
             end
         end
     end
 
-    -- Setup Character
-    local function setupChar(c)
-        char = c
-        c.ChildAdded:Connect(function(tool)
-            if tool:IsA("Tool") then
-                tool.Activated:Connect(function()
-                    if aimbotEnabled and target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") and target.Character:FindFirstChild("Humanoid") then
-                        local tRoot, tHum = target.Character.HumanoidRootPart, target.Character.Humanoid
-                        rs.MainEvent:FireServer("UpdateMousePos", predictPos(tRoot, tHum))
-                    end
-                end)
-            end
-        end)
-    end
-
-    -- UI Elements
+    -- UI Elements for Silent Aimbot
     CombatSection:Toggle({
         Name = "Silent Aim",
         State = false,
         Callback = function(state)
             aimbotEnabled = state
-            if not state and tracer then tracer.Visible = false end
+            if not state then
+                target, lastPos, lastTime = nil, nil, nil
+                if tracer then tracer.Visible = false end
+                ToggleTargetStrafe(false)
+            end
         end,
         Flag = "SilentAimToggle"
     })
@@ -158,7 +354,7 @@ local function SetupSilentAimbot()
         Name = "Aimbot Keybind",
         State = Enum.KeyCode.C,
         Mode = "Toggle",
-        Callback = function() end, -- Keybind handled in handleInput
+        Callback = function() end,
         Flag = "AimbotKeybind",
         UseKey = true
     }).Set = function(newKey)
@@ -207,35 +403,29 @@ local function SetupSilentAimbot()
         Flag = "AimVisualizer"
     })
 
-	-- Изначальная настройка цвета трейсера
-local tracerColor = Color3.fromRGB(255, 50, 50)
+    CombatSection:Colorpicker({
+        Name = "Visualizer Color",
+        State = tracerColor,
+        Callback = function(color)
+            tracerColor = color
+            if tracer then tracer.Color = color end
+        end,
+        Flag = "VisualizerColor"
+    })
 
-	-- Добавление Colorpicker в секцию CombatSection
-		CombatSection:Colorpicker({
-    	Name = "Visualizer Color",
-   		State = tracerColor,
-    	Callback = function(color)
-        	tracerColor = color
-        	if tracer then tracer.Color = color end
-    	end,
-    	Flag = "VisualizerColor"
-	})
-
-    -- Настройка слайдера в UI
-	CombatSection:Slider({
-    Name = "Visualizer Opacity",
-    Min = 1,
-    Max = 100,
-    Decimals = 1,
-    State = initialOpacity,
-    Text = "Opacity: [value]%",
-    Callback = function(value)
-        local transparency = 1 - (value / 100)
-        tracerTransparency = transparency
-        if tracer then tracer.Transparency = transparency end
-    end,
-    Flag = "VisualizerOpacity"
-	})
+    CombatSection:Slider({
+        Name = "Visualizer Opacity",
+        Min = 1,
+        Max = 100,
+        Decimals = 1,
+        State = initialOpacity,
+        Text = "Opacity: [value]%",
+        Callback = function(value)
+            tracerTransparency = 1 - (value / 100)
+            if tracer then tracer.Transparency = tracerTransparency end
+        end,
+        Flag = "VisualizerOpacity"
+    })
 
     CombatSection:Slider({
         Name = "Visualizer Thickness",
@@ -251,13 +441,106 @@ local tracerColor = Color3.fromRGB(255, 50, 50)
         Flag = "VisualizerThickness"
     })
 
-	
+    -- UI Elements for Targetstrafe
+    CombatSection:Toggle({
+        Name = "Targetstrafe",
+        State = false,
+        Callback = function(state)
+            ToggleTargetStrafe(state and aimbotEnabled and target ~= nil)
+        end,
+        Flag = "TargetStrafeToggle"
+    })
+
+    CombatSection:Dropdown({
+        Name = "Strafe Mode",
+        Options = {"Custom", "Random", "Upwoake"},
+        State = "Custom",
+        Callback = function(option) strafeMode = option end,
+        Flag = "StrafeMode"
+    })
+
+    CombatSection:Slider({
+        Name = "Strafe Speed",
+        Min = 1,
+        Max = 100,
+        Decimals = 1,
+        State = strafeSpeed,
+        Text = "Speed: [value]",
+        Callback = function(value) strafeSpeed = value end,
+        Flag = "StrafeSpeed"
+    })
+
+    CombatSection:Slider({
+        Name = "Strafe Radius",
+        Min = 5,
+        Max = 20,
+        Decimals = 1,
+        State = strafeRadius,
+        Text = "Radius: [value]",
+        Callback = function(value) strafeRadius = value end,
+        Flag = "StrafeRadius"
+    })
+
+    CombatSection:Slider({
+        Name = "Upwoake Height",
+        Min = 0,
+        Max = 10,
+        Decimals = 1,
+        State = upwoakeHeight,
+        Text = "Height: [value]",
+        Callback = function(value) upwoakeHeight = value end,
+        Flag = "UpwoakeHeight"
+    })
+
+    CombatSection:Colorpicker({
+        Name = "Ghost Color",
+        State = ghostColor,
+        Callback = function(color)
+            ghostColor = color
+            if ghostModel then
+                for _, part in ipairs(ghostModel:GetChildren()) do
+                    if part:IsA("BasePart") then
+                        part.Color = color
+                    end
+                end
+                local highlight = ghostModel:FindFirstChild("GhostHighlight")
+                if highlight then
+                    highlight.FillColor = color
+                end
+            end
+        end,
+        Flag = "GhostColor"
+    })
+
+    CombatSection:Slider({
+        Name = "Ghost Transparency",
+        Min = 0,
+        Max = 100,
+        Decimals = 1,
+        State = math.floor(ghostTransparency * 100),
+        Text = "Transparency: [value]%",
+        Callback = function(value)
+            ghostTransparency = value / 100
+            if ghostModel then
+                for _, part in ipairs(ghostModel:GetChildren()) do
+                    if part:IsA("BasePart") then
+                        part.Transparency = ghostTransparency
+                    end
+                end
+            end
+        end,
+        Flag = "GhostTransparency"
+    })
 
     -- Initialize
     createTracer()
     if char then setupChar(char) end
     lp.CharacterAdded:Connect(setupChar)
-    uis.InputBegan:Connect(handleInput)
+    if uis then
+        uis.InputBegan:Connect(handleInput)
+    else
+        warn("UserInputService not available")
+    end
     run.RenderStepped:Connect(updateTracer)
 end
 
